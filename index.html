@@ -322,11 +322,11 @@
           return joints;
         },
         supports: function () {
-          return this.supportDistances.map(function (value, index) {return index + 1});
+          return this.supportDistances.map(function (value, index) {return index + 1;});
         },
         filteredCases: function () {
           return _.pickBy(this.cases, function(value) {
-            return (this.type === 'All' || value.type === this.type)
+            return (this.type === 'All' || value.type === this.type);
           }.bind(this));
         }
       },
@@ -481,7 +481,7 @@
             type: 'Configuration',
             axles: [],
             axleLoads: [],
-            UDLs: this.project.spans.map(function () {return 0}),
+            UDLs: this.project.spans.map(function () {return 0;}),
             equalizeUDLs: false,
             supportReleases: [ false, false ],
             entries: [],
@@ -562,7 +562,7 @@
           var UDL = prompt("Please enter a UDL magnitude", this.cases[this.activeCase].UDLs[index]);
           if (!isNaN(UDL) && UDL >= 0) {
             if (this.cases[this.activeCase].equalizeUDLs) {
-              this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return UDL});
+              this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return UDL;});
             } else {
               this.cases[this.activeCase].UDLs.splice(index, 1, UDL);
             }
@@ -630,7 +630,7 @@
         toggleEqualize: function () {
           if (this.cases[this.activeCase].equalizeUDLs === true) {
             var first = this.cases[this.activeCase].UDLs[0];
-            this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return first});
+            this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return first;});
           }
           var params = this.generateParams(this.cases[this.activeCase]);
           this.analyzeConfiguration(params);
@@ -659,14 +659,14 @@
           return params;
         },
         writeConfig: function(params, id) {
-          this.cases[id].shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].momentMax = params.momentMax.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].momentMin = params.momentMin.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].supportMax = params.supportMax.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].bearingMax = params.bearingMax.map(function (value) {return (Math.round(value * 100) / 100)});
-          this.cases[id].bearingMin = params.bearingMin.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].momentMax = params.momentMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].momentMin = params.momentMin.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].supportMax = params.supportMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].bearingMax = params.bearingMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.cases[id].bearingMin = params.bearingMin.map(function (value) {return (Math.round(value * 100) / 100);});
         },
         analyzeConfiguration: function (params) {
           var spans = params.spans;
