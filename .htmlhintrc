@@ -1,5 +1,5 @@
 {
     "jshint": {
-      "esnext": 6
+      "esversion": 6
     }
 }

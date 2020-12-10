@@ -1,271 +1,74 @@
 <!DOCTYPE html>
-<html class="has-navbar-fixed-top">
+<html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bridge Loading</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-switch@2.0.0/dist/css/bulma-switch.min.css">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Nunito:400,700);
       .main {
         padding: 10px;
       }
-      .navbar, .navbar-menu, .navbar-start, .navbar-end  {
-        display: flex;
-      }
-      .navbar-menu, a.navbar-item:hover {
-        background-color: #00d1b2;
-        box-shadow: 0 8px 16px rgba(0, 0, 1, 0);
-      }
-      .circle {
-        width: 25px;
-        height: 25px;
-        background: black;
-        border-radius: 50%;
-        margin-top: 40px;
-        margin-left: -10px;
-        margin-right: -10px;
-      }
-      .triangle {
-        width: 0;
-        height: 0;
-        border-left: 13px solid transparent;
-        border-right: 13px solid transparent;
-        border-bottom: 26px solid black;
-        padding-top: 40px;
-        margin-right: -10px;
-      }
       [v-cloak] {
         display: none;
-      }
-      .loader {
-        border: 16px solid #f3f3f3; /* Light grey */
-        border-top: 16px solid #00d1b2; /* Primary */
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 2s linear infinite;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <nav class="navbar is-primary is-fixed-top" role="navigation" aria-label="main navigation">
-        <div class="navbar-brand">
-          <div class="navbar-item is-size-4">BL</div>
-        </div>
-        <div id="appNavbar" class="navbar-menu">
-          <div class="navbar-start">
-            <a class="navbar-item" href="#spans" v-on:click="updateRoute('spans')">Spans</a>
-            <a class="navbar-item" href="#cases" v-on:click="updateRoute('cases')">Cases</a>
-            <a class="navbar-item" href="#results" v-on:click="updateRoute('results')">Results</a>
-            <a class="navbar-item" href="#report" v-on:click="updateRoute('report')">Report</a>
-          </div>
-        </div>
-      </nav>
-      <div v-bind:class="{ modal: true, 'is-active': displayDivisions }" v-cloak>
-        <div class="modal-background"></div>
-        <div class="modal-card">
-          <header class="modal-card-head">
-            <p class="modal-card-title">Edit Divisions</p>
-            <button class="delete" v-on:click="closeDivisions()"></button>
-          </header>
-          <section class="modal-card-body">
-            <div class="tags has-addons" v-for="(division, index) in project.divisions">
-              <span>{{ 'Span ' + (index + 1) + ':' }}</span>
-              <span>&nbsp;</span>
-              <span class="tag" v-on:click="editDivision(division - 1, index)">-</span>
-              <span class="tag is-primary">{{ division }}</span>
-              <span class="tag" v-on:click="editDivision(division + 1, index)">+</span>
-            </div>
-          </section>
-          <footer class="modal-card-foot">
-            <button class="button" v-on:click="closeDivisions()" style="float: right">Close</button>
-          </footer>
-        </div>
-      </div>
       <div class="main" v-cloak>
-        <div style="display: none">{{ doesCaseExist }}{{ supportDistances }}{{ joints }}</div>
-        <section v-if="route === 'spans'">
-          <span class="title is-4">Spans</span>
-          <div class="field is-grouped is-grouped-multiline">
-            <div class="control" v-for="(span, index) in project.spans">
-              <div class="tags has-addons">
-                <a class="triangle"/>
-                <a class="tag is-link" v-on:click="editSpan(index)">{{ span }}</a>
-                <a class="tag is-delete" v-on:click="deleteSpan(index)"></a>
-                <a class="circle" v-if="project.globalSupportReleases[index + 1] || index === project.spans.length - 1"></a>
-              </div>
+        <span class="title is-4">Spans</span>
+        <div class="field is-grouped is-grouped-multiline">
+          <div class="control" v-for="(span, index) in project.spans">
+            <div class="tags has-addons">
+              <a class="tag is-link" v-on:click="editSpan(index)">{{ span }}</a>
+              <a class="tag is-delete" v-on:click="deleteSpan(index)"></a>
             </div>
           </div>
-          <div class="buttons">
-            <a class="button is-primary" v-on:click="addSpan()">Add Span</a>
-          </div>
-          <div class="buttons">
-            <a class="button is-primary" v-on:click="openDivisions()">Edit Divisions</a>
-          </div>
-        </section>
-        <section v-if="route === 'cases'">
-          <div>
-            <span class="title is-4">Load Cases</span>
-            <span class="tag is-primary is-pulled-right" v-on:click="updateType('All')">
-              View All
-            </span>
-          </div>
-          <div class="tabs is-centered">
-            <ul>
-              <li v-bind:class="{'is-active':(type === 'Configuration')}">
-                <a v-on:click="updateType('Configuration')">Configurations</a>
-              </li>
-              <li v-bind:class="{'is-active':(type === 'Envelope')}">
-                <a v-on:click="updateType('Envelope')">Envelopes</a>
-              </li>
-              <li v-bind:class="{'is-active':(type === 'Combination')}">
-                <a v-on:click="updateType('Combination')">Combinations</a>
-              </li>
-            </ul>
-          </div>
-          <div class="card-table">
-            <div class="content">
-              <table class="table is-fullwidth is-striped">
-                <tbody>
-                  <tr v-for="(loadCase, id) in filteredCases">
-                    <td><a href="#editCase" v-on:click="editCase(id)">{{ loadCase.name }}</a></td>
-                    <td>
-                      <a class="button is-small is-primary">Duplicate</a>
-                    </td>
-                    <td><a class="button is-small is-danger" v-on:click="deleteCase(id)">Delete</a></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="buttons">
-            <a class="button is-primary" v-if="type !== 'All'" v-on:click="addCase()">Add {{ type }}</a>
-            <a class="button is-primary" v-if="type === 'All'" v-on:click="addCase()">Add Configuration</a>
-          </div>
-        </section>
-        <section v-if="route === 'editCase'">
-          <div class="title is-4">Edit Load Case</div>
-          <div class="title is-5" v-on:click="renameCase()">
-            Name: {{ cases[activeCase].name }}
-          </div>
-          <div v-if="cases[activeCase].type === 'Configuration'">
-	          <div class="title is-5">Uniformly Distributed Loads</div>
-	          <div class="field is-grouped is-grouped-multiline">
-	            <div class="control" v-for="(UDL, index) in cases[activeCase].UDLs">
-	              <div class="tags has-addons">
-	                  <a class="tag is-link" v-on:click="editUDL(index)">{{ UDL }}</a>
-	              </div>
-	            </div>
-	            <div class="field">
-	              <input id="equalize" type="checkbox" class="switch" v-on:change="toggleEqualize()" v-model="cases[activeCase].equalizeUDLs"></input>
-	              <label for="equalize">Equalize</label>
-	            </div>
-	          </div>
-	        </div><!--UDLs-->
-	        <div v-if="cases[activeCase].type === 'Configuration'">
-	          <a v-if="cases[activeCase].axles.length === 0" class="button is-primary is-fullwidth" v-on:click="addAxle()">Add Vehicle</a>
-	          <div v-if="cases[activeCase].axles.length !== 0">
-	            <div class="title is-5">Axles</div>
-	            <ul>
-	              <li v-for="(axle, index) in cases[activeCase].axles">
-	                {{ cases[activeCase].axleLoads[index] }} @ {{ axle }}
-	                <a class="button is-small is-primary" v-on:click="editAxle(index)">Edit</a>
-	                 <a class="button is-small is-danger" v-on:click="deleteAxle(index)">Delete</a>
-	              </li>
-	            </ul>
-	            <div>
-	              <a class="button is-primary is-fullwidth" v-on:click="addAxle()">Add Axle</a>
-	            </div>
-	          </div>
-	        </div><!--axles-->
-	        <div v-if="cases[activeCase].type === 'Configuration'">
-	          <div v-if="!cases[activeCase].supportReleases.includes(true) && project.spans.length !== 1"
-	            v-on:click="updateSR(1)">
-	            <a class="button is-primary is-fullwidth">Add Support Releases</a>
-	          </div>
-	          <div v-if="cases[activeCase].supportReleases.includes(true) && project.spans.length !== 1">Support Releases:
-	            <ul>
-	              <li v-for="(value, index) in cases[activeCase].supportReleases">
-	                <input type="checkbox" id="checkboxSR" v-on:change="updateSR(index)" v-model="value"
-	                  :disabled="index === 0 || index === cases[activeCase].supportReleases.length - 1">
-	                <label for="checkboxSR">Support {{ index + 1 }}</label>
-	              </li>
-	            </ul>
-	          </div>
-	        </div><!--support releases-->
-          <div v-if="cases[activeCase].type !== 'Configuration'">
-            <div class="title is-5">Entries</div>
-          </div><!--entries-->
-          <div v-if="cases[activeCase].type === 'Combination'">
-            <div class="title is-5">Factors</div>
-          </div><!--factors-->
-        </section>
-        <section v-if="route === 'report'">
-          <span class="title is-4">Report</span>
-          <div v-if="doesCaseExist">
-            <div v-for="(loadCase, id) in cases">
-              <div>{{loadCase.name}}</div>
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <th>Joint</th>
-                    <th>Shear Max</th>
-                    <th>Shear Min</th>
-                    <th>Moment Max</th>
-                    <th>Moment Min</th>
-                   </tr>
-                  <tr v-for="(joint, index) in joints">
-                    <td>{{ joint }}</td>
-                    <td>{{loadCase.shearMax[index]}}</td>
-                    <td>{{loadCase.shearMin[index]}}</td>
-                    <td>{{loadCase.momentMax[index]}}</td>
-                    <td>{{loadCase.momentMin[index]}}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <th>Supports</th>
-                    <th>Support Max</th>
-                    <th>Support Min</th>
-                   </tr>
-                  <tr v-for="(support, index) in supports">
-                    <td>{{ support }}</td>
-                    <td>{{loadCase.supportMax[index]}}</td>
-                    <td>{{loadCase.supportMin[index]}}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-        <section v-show="route === 'results'">
-          <span class="title is-4">Results</span>
-          <div class="title is-5">Shear</div>
-          <div ref="shearChart"></div>
-          <div class="title is-5">Moment</div>
-          <div ref="momentChart"></div>
-          <div class="title is-5">Reactions</div>
-          <div ref="reactionChart"></div>
-        </section>
+        </div>
+        <div class="buttons">
+          <a class="button is-primary" v-on:click="addSpan()">Add Span</a>
+        </div>
+        <span class="title is-4">Report</span>
+        <div v-for="(loadCase, id) in cases">
+          <div>{{loadCase.name}}</div>
+          <table class="table">
+            <tbody>
+              <tr>
+                <th>Joint</th>
+                <th>Shear Max</th>
+                <th>Shear Min</th>
+                <th>Moment Max</th>
+                <th>Moment Min</th>
+               </tr>
+              <tr v-for="(joint, index) in joints">
+                <td>{{ joint }}</td>
+                <td>{{loadCase.shearMax[index]}}</td>
+                <td>{{loadCase.shearMin[index]}}</td>
+                <td>{{loadCase.momentMax[index]}}</td>
+                <td>{{loadCase.momentMin[index]}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="table">
+            <tbody>
+              <tr>
+                <th>Supports</th>
+                <th>Support Max</th>
+                <th>Support Min</th>
+               </tr>
+              <tr v-for="(support, index) in supports">
+                <td>{{ support }}</td>
+                <td>{{loadCase.supportMax[index]}}</td>
+                <td>{{loadCase.supportMin[index]}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div><!--main-->
-      <div v-if="!loaded">
-        <div class="loader"></div>
-      </div>
     </div><!--app-->
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
-  <script src="https://www.gstatic.com/charts/loader.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
   <script>
     var app = new Vue({
@@ -284,13 +87,7 @@
         displayDivisions: false,
         loaded: true
       },
-      mounted: function () {
-        this.loaded = true;
-      },
       computed: {
-        doesCaseExist: function () {
-          return Object.entries(this.cases).length !== 0;
-        },
         supportDistances: function () {
           var cumulative = 0;
           var supportDistances = this.project.spans.map(function (value) {
