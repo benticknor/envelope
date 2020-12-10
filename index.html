@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bridge Loading</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-switch@2.0.0/dist/css/bulma-switch.min.css">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Nunito:400,700);
+      .main {
+        padding: 10px;
+      }
+      .navbar, .navbar-menu, .navbar-start, .navbar-end  {
+        display: flex;
+      }
+      .navbar-menu, a.navbar-item:hover {
+        background-color: #00d1b2;
+        box-shadow: 0 8px 16px rgba(0, 0, 1, 0);
+      }
+      .circle {
+        width: 25px;
+        height: 25px;
+        background: black;
+        border-radius: 50%;
+        margin-top: 40px;
+        margin-left: -10px;
+        margin-right: -10px;
+      }
+      .triangle {
+        width: 0;
+        height: 0;
+        border-left: 13px solid transparent;
+        border-right: 13px solid transparent;
+        border-bottom: 26px solid black;
+        padding-top: 40px;
+        margin-right: -10px;
+      }
+      [v-cloak] {
+        display: none;
+      }
+      .loader {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #00d1b2; /* Primary */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <nav class="navbar is-primary is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+          <div class="navbar-item is-size-4">BL</div>
+        </div>
+        <div id="appNavbar" class="navbar-menu">
+          <div class="navbar-start">
+            <a class="navbar-item" href="#spans" v-on:click="updateRoute('spans')">Spans</a>
+            <a class="navbar-item" href="#cases" v-on:click="updateRoute('cases')">Cases</a>
+            <a class="navbar-item" href="#results" v-on:click="updateRoute('results')">Results</a>
+            <a class="navbar-item" href="#report" v-on:click="updateRoute('report')">Report</a>
+          </div>
+        </div>
+      </nav>
+      <div v-bind:class="{ modal: true, 'is-active': displayDivisions }" v-cloak>
+        <div class="modal-background"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Edit Divisions</p>
+            <button class="delete" v-on:click="closeDivisions()"></button>
+          </header>
+          <section class="modal-card-body">
+            <div class="tags has-addons" v-for="(division, index) in project.divisions">
+              <span>{{ 'Span ' + (index + 1) + ':' }}</span>
+              <span>&nbsp;</span>
+              <span class="tag" v-on:click="editDivision(division - 1, index)">-</span>
+              <span class="tag is-primary">{{ division }}</span>
+              <span class="tag" v-on:click="editDivision(division + 1, index)">+</span>
+            </div>
+          </section>
+          <footer class="modal-card-foot">
+            <button class="button" v-on:click="closeDivisions()" style="float: right">Close</button>
+          </footer>
+        </div>
+      </div>
+      <div class="main" v-cloak>
+        <div style="display: none">{{ doesCaseExist }}{{ supportDistances }}{{ joints }}</div>
+        <section v-if="route === 'spans'">
+          <span class="title is-4">Spans</span>
+          <div class="field is-grouped is-grouped-multiline">
+            <div class="control" v-for="(span, index) in project.spans">
+              <div class="tags has-addons">
+                <a class="triangle"/>
+                <a class="tag is-link" v-on:click="editSpan(index)">{{ span }}</a>
+                <a class="tag is-delete" v-on:click="deleteSpan(index)"></a>
+                <a class="circle" v-if="project.globalSupportReleases[index + 1] || index === project.spans.length - 1"></a>
+              </div>
+            </div>
+          </div>
+          <div class="buttons">
+            <a class="button is-primary" v-on:click="addSpan()">Add Span</a>
+          </div>
+          <div class="buttons">
+            <a class="button is-primary" v-on:click="openDivisions()">Edit Divisions</a>
+          </div>
+        </section>
+        <section v-if="route === 'cases'">
+          <div>
+            <span class="title is-4">Load Cases</span>
+            <span class="tag is-primary is-pulled-right" v-on:click="updateType('All')">
+              View All
+            </span>
+          </div>
+          <div class="tabs is-centered">
+            <ul>
+              <li v-bind:class="{'is-active':(type === 'Configuration')}">
+                <a v-on:click="updateType('Configuration')">Configurations</a>
+              </li>
+              <li v-bind:class="{'is-active':(type === 'Envelope')}">
+                <a v-on:click="updateType('Envelope')">Envelopes</a>
+              </li>
+              <li v-bind:class="{'is-active':(type === 'Combination')}">
+                <a v-on:click="updateType('Combination')">Combinations</a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-table">
+            <div class="content">
+              <table class="table is-fullwidth is-striped">
+                <tbody>
+                  <tr v-for="(loadCase, id) in filteredCases">
+                    <td><a href="#editCase" v-on:click="editCase(id)">{{ loadCase.name }}</a></td>
+                    <td>
+                      <a class="button is-small is-primary">Duplicate</a>
+                    </td>
+                    <td><a class="button is-small is-danger" v-on:click="deleteCase(id)">Delete</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="buttons">
+            <a class="button is-primary" v-if="type !== 'All'" v-on:click="addCase()">Add {{ type }}</a>
+            <a class="button is-primary" v-if="type === 'All'" v-on:click="addCase()">Add Configuration</a>
+          </div>
+        </section>
+        <section v-if="route === 'editCase'">
+          <div class="title is-4">Edit Load Case</div>
+          <div class="title is-5" v-on:click="renameCase()">
+            Name: {{ cases[activeCase].name }}
+          </div>
+          <div v-if="cases[activeCase].type === 'Configuration'">
+	          <div class="title is-5">Uniformly Distributed Loads</div>
+	          <div class="field is-grouped is-grouped-multiline">
+	            <div class="control" v-for="(UDL, index) in cases[activeCase].UDLs">
+	              <div class="tags has-addons">
+	                  <a class="tag is-link" v-on:click="editUDL(index)">{{ UDL }}</a>
+	              </div>
+	            </div>
+	            <div class="field">
+	              <input id="equalize" type="checkbox" class="switch" v-on:change="toggleEqualize()" v-model="cases[activeCase].equalizeUDLs"></input>
+	              <label for="equalize">Equalize</label>
+	            </div>
+	          </div>
+	        </div><!--UDLs-->
+	        <div v-if="cases[activeCase].type === 'Configuration'">
+	          <a v-if="cases[activeCase].axles.length === 0" class="button is-primary is-fullwidth" v-on:click="addAxle()">Add Vehicle</a>
+	          <div v-if="cases[activeCase].axles.length !== 0">
+	            <div class="title is-5">Axles</div>
+	            <ul>
+	              <li v-for="(axle, index) in cases[activeCase].axles">
+	                {{ cases[activeCase].axleLoads[index] }} @ {{ axle }}
+	                <a class="button is-small is-primary" v-on:click="editAxle(index)">Edit</a>
+	                 <a class="button is-small is-danger" v-on:click="deleteAxle(index)">Delete</a>
+	              </li>
+	            </ul>
+	            <div>
+	              <a class="button is-primary is-fullwidth" v-on:click="addAxle()">Add Axle</a>
+	            </div>
+	          </div>
+	        </div><!--axles-->
+	        <div v-if="cases[activeCase].type === 'Configuration'">
+	          <div v-if="!cases[activeCase].supportReleases.includes(true) && project.spans.length !== 1"
+	            v-on:click="updateSR(1)">
+	            <a class="button is-primary is-fullwidth">Add Support Releases</a>
+	          </div>
+	          <div v-if="cases[activeCase].supportReleases.includes(true) && project.spans.length !== 1">Support Releases:
+	            <ul>
+	              <li v-for="(value, index) in cases[activeCase].supportReleases">
+	                <input type="checkbox" id="checkboxSR" v-on:change="updateSR(index)" v-model="value"
+	                  :disabled="index === 0 || index === cases[activeCase].supportReleases.length - 1">
+	                <label for="checkboxSR">Support {{ index + 1 }}</label>
+	              </li>
+	            </ul>
+	          </div>
+	        </div><!--support releases-->
+          <div v-if="cases[activeCase].type !== 'Configuration'">
+            <div class="title is-5">Entries</div>
+          </div><!--entries-->
+          <div v-if="cases[activeCase].type === 'Combination'">
+            <div class="title is-5">Factors</div>
+          </div><!--factors-->
+        </section>
+        <section v-if="route === 'report'">
+          <span class="title is-4">Report</span>
+          <div v-if="doesCaseExist">
+            <div v-for="(loadCase, id) in cases">
+              <div>{{loadCase.name}}</div>
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th>Joint</th>
+                    <th>Shear Max</th>
+                    <th>Shear Min</th>
+                    <th>Moment Max</th>
+                    <th>Moment Min</th>
+                   </tr>
+                  <tr v-for="(joint, index) in joints">
+                    <td>{{ joint }}</td>
+                    <td>{{loadCase.shearMax[index]}}</td>
+                    <td>{{loadCase.shearMin[index]}}</td>
+                    <td>{{loadCase.momentMax[index]}}</td>
+                    <td>{{loadCase.momentMin[index]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th>Supports</th>
+                    <th>Support Max</th>
+                    <th>Support Min</th>
+                   </tr>
+                  <tr v-for="(support, index) in supports">
+                    <td>{{ support }}</td>
+                    <td>{{loadCase.supportMax[index]}}</td>
+                    <td>{{loadCase.supportMin[index]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        <section v-show="route === 'results'">
+          <span class="title is-4">Results</span>
+          <div class="title is-5">Shear</div>
+          <div ref="shearChart"></div>
+          <div class="title is-5">Moment</div>
+          <div ref="momentChart"></div>
+          <div class="title is-5">Reactions</div>
+          <div ref="reactionChart"></div>
+        </section>
+      </div><!--main-->
+      <div v-if="!loaded">
+        <div class="loader"></div>
+      </div>
+    </div><!--app-->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        project: {
+          name: "Project 1",
+          spans: [ 10 ],
+          divisions: [ 10 ],
+          globalSupportReleases: [ false, false ]
+        },
+        cases: {},
+        activeCase: "",
+        route: "spans",
+        type: "All",
+        displayDivisions: false,
+        loaded: true
+      },
+      mounted: function () {
+        this.loaded = true;
+      },
+      computed: {
+        doesCaseExist: function () {
+          return Object.entries(this.cases).length !== 0;
+        },
+        supportDistances: function () {
+          var cumulative = 0;
+          var supportDistances = this.project.spans.map(function (value) {
+            cumulative = Number(cumulative) + Number(value);
+            return cumulative;
+          });
+          supportDistances.unshift(0);
+          return supportDistances;
+        },
+        joints: function () {
+          var spans = this.project.spans;
+          var divisions = this.project.divisions;
+          var supportDistances = this.supportDistances;
+          var decimalPlaces = _.max(spans.map(function (value) {
+            if (value.toString().split('.')[1] !== undefined) {
+              return value.toString().split('.')[1].length;
+            } else {
+              return 2;
+            }
+          }));
+          var joints = _.uniq(_.flatten(spans.map(function (span, spanIndex) {
+            return Array(divisions[spanIndex] + 1).fill(0).map(function (val, index) {
+              return supportDistances[spanIndex] + span/divisions[spanIndex] * index;
+            });
+          })));
+          joints = joints.map(function (value) {
+            return Math.round(value * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+          });
+          return joints;
+        },
+        supports: function () {
+          return this.supportDistances.map(function (value, index) {return index + 1});
+        },
+        filteredCases: function () {
+          return _.pickBy(this.cases, function(value) {
+            return (this.type === 'All' || value.type === this.type)
+          }.bind(this));
+        }
+      },
+      methods: {
+        openDivisions: function () {
+          this.displayDivisions = true;
+        },
+        closeDivisions: function () {
+          this.displayDivisions = false;
+        },
+        editCase: function(id) {
+          this.activeCase = id;
+          this.route = "editCase";
+        },
+        updateType: function (name) {
+          this.type = name;
+        },
+        updateRoute: function (page) {
+          this.route = page;
+        },
+        updateChart: function () {
+          var drawChart = function () {
+            var shearData = new google.visualization.DataTable();
+            shearData.addColumn('number', 'Joint');
+            shearData.addColumn('number', 'Min Shear');
+            shearData.addColumn('number', 'Max Shear');
+            shearData.addRows(this.joints.map(function (value, index) {
+              return [
+                value,
+                this.cases[this.activeCase].shearMin[index],
+                this.cases[this.activeCase].shearMax[index]
+              ];
+            }.bind(this)));
+            var momentData = new google.visualization.DataTable();
+            momentData.addColumn('number', 'Joint');
+            momentData.addColumn('number', 'Min Moment');
+            momentData.addColumn('number', 'Max Moment');
+            momentData.addRows(this.joints.map(function (value, index) {
+              return [
+                value,
+                this.cases[this.activeCase].momentMin[index],
+                this.cases[this.activeCase].momentMax[index]
+              ];
+            }.bind(this)));
+            var reactionData = google.visualization.arrayToDataTable([
+              ['Year', 'Sales', 'Expenses', 'Profit'],
+              ['2014', 1000, 400, 200],
+              ['2015', 1170, 460, 250],
+              ['2016', 660, 1120, 300],
+              ['2017', 1030, 540, 350]
+            ]);
+            var options = {
+              width: 500,
+              height: 200
+            };
+            var shearChart = new google.charts.Line(this.$refs.shearChart);
+            shearChart.draw(shearData, google.charts.Line.convertOptions(options));
+            var momentChart = new google.charts.Line(this.$refs.momentChart);
+            momentChart.draw(momentData, google.charts.Line.convertOptions(options));
+            var reactionChart = new google.charts.Bar(this.$refs.reactionChart);
+            reactionChart.draw(reactionData, google.charts.Bar.convertOptions(options));
+          }.bind(this);
+          google.charts.load('current', {'packages':['line']});
+          google.charts.setOnLoadCallback(drawChart);
+        },
+        addSpan: function () {
+          var length = prompt("Please enter a span length", "");
+          var params = {};
+          if (!isNaN(length) && length >= 0 && length !== null) {
+            this.project.spans.push(length);
+            this.project.divisions.push(10);
+            this.project.globalSupportReleases.push(false);
+            for (let id in this.cases) {
+              if (this.cases[id].equalizeUDLs) {
+                this.cases[id].UDLs.push(this.cases[id].UDLs[0]);
+              } else {
+                this.cases[id].UDLs.push(0);
+              }
+              this.cases[id].supportReleases.push(false);
+              params = this.generateParams(this.cases[id]);
+              this.analyzeConfiguration(params);
+              this.writeConfig(params, id);
+            }
+          } else {
+            alert("Invalid span length");
+          }
+        },
+        deleteSpan: function (index) {
+          var params = {};
+          this.project.spans.splice(index, 1);
+          this.project.divisions.splice(index, 1);
+          this.project.globalSupportReleases.splice(index + 1, 1);
+          for (let id in this.cases) {
+            this.cases[id].UDLs.splice(index, 1);
+            this.cases[id].supportReleases.splice(index + 1, 1);
+            params = this.generateParams(this.cases[id]);
+            this.analyzeConfiguration(params);
+            this.writeConfig(params, id);
+          }
+        },
+        editSpan: function (index) {
+          var length = prompt("Please enter a span length", this.project.spans[index]);
+          var params = {};
+          if (!isNaN(length) && length >= 0 && length !== null) {
+            this.project.spans.splice(index, 1, length);
+            for (let id in this.cases) {
+              params = this.generateParams(this.cases[id]);
+              this.analyzeConfiguration(params);
+              this.writeConfig(params, id);
+            }
+          } else {
+            alert("Invalid span length");
+          }
+          var div = prompt("Please enter a number of points", this.project.divisions[index]);
+          if (!isNaN(div) && div >= 0 && div !== null) {
+            this.project.divisions.splice(index, 1, div);
+            for (let id in this.cases) {
+              params = this.generateParams(this.cases[id]);
+              this.analyzeConfiguration(params);
+              this.writeConfig(params, id);
+            }
+          } else {
+            alert("Invalid number of points");
+          }
+        },
+        editDivision: function (number, index) {
+          var params = {};
+          this.project.divisions.splice(index, 1, number);
+          for (let id in this.cases) {
+            params = this.generateParams(this.cases[id]);
+            this.analyzeConfiguration(params);
+            this.writeConfig(params, id);
+          }
+        },
+        addCase: function() {
+          switch(this.type) {
+            case 'Envelope':
+              this.addEnvelope();
+              break;
+            case 'Combination':
+              this.addCombination();
+              break;
+            default:
+              this.addConfiguration();
+          }
+        },
+        addConfiguration: function () {
+          var name = prompt("Please enter a configuration name", "");
+          var id = Math.random().toString(36).substring(7);
+          Vue.set(this.cases, id, {
+            name: name,
+            type: 'Configuration',
+            axles: [],
+            axleLoads: [],
+            UDLs: this.project.spans.map(function () {return 0}),
+            equalizeUDLs: false,
+            supportReleases: [ false, false ],
+            entries: [],
+            factors: [],
+            shearMax: [],
+            shearMin: [],
+            momentMax: [],
+            momentMin: [],
+            bearingMax: [],
+            bearingMin: [],
+            supportMax: [],
+            supportMin: []
+          });
+          this.activeCase = id;
+          var params = this.generateParams(this.cases[id]);
+          this.analyzeConfiguration(params);
+          this.writeConfig(params, id);
+          this.route = "editCase";
+        },
+        addEnvelope: function () {
+          var name = prompt("Please enter an envelope name", "");
+          var id = Math.random().toString(36).substring(7);
+          Vue.set(this.cases, id, {
+            name: name,
+            type: 'Envelope',
+            axles: [],
+            axleLoads: [],
+            UDLs: [],
+            equalizeUDLs: false,
+            supportReleases: [ false, false ],
+            entries: [],
+            factors: [],
+            shearMax: [],
+            shearMin: [],
+            momentMax: [],
+            momentMin: [],
+            bearingMax: [],
+            bearingMin: [],
+            supportMax: [],
+            supportMin: []
+          });
+          this.activeCase = id;
+          this.route = "editCase";
+        },
+        addCombination: function () {
+          var name = prompt("Please enter a combination name", "");
+          var id = Math.random().toString(36).substring(7);
+          Vue.set(this.cases, id, {
+            name: name,
+            type: 'Combination',
+            axles: [],
+            axleLoads: [],
+            UDLs: [],
+            equalizeUDLs: false,
+            supportReleases: [],
+            entries: [],
+            factors: [],
+            shearMax: [],
+            shearMin: [],
+            momentMax: [],
+            momentMin: [],
+            bearingMax: [],
+            bearingMin: [],
+            supportMax: [],
+            supportMin: []
+          });
+          this.activeCase = id;
+          this.route = "editCase";
+        },
+        deleteCase: function (id) {
+          Vue.delete(this.cases, id);
+        },
+        renameCase: function () {
+          var name = prompt("Please enter a case name", this.cases[this.activeCase].name);
+          this.cases[this.activeCase].name = name;
+        },
+        editUDL: function (index) {
+          var UDL = prompt("Please enter a UDL magnitude", this.cases[this.activeCase].UDLs[index]);
+          if (!isNaN(UDL) && UDL >= 0) {
+            if (this.cases[this.activeCase].equalizeUDLs) {
+              this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return UDL});
+            } else {
+              this.cases[this.activeCase].UDLs.splice(index, 1, UDL);
+            }
+            var params = this.generateParams(this.cases[this.activeCase]);
+            this.analyzeConfiguration(params);
+            this.writeConfig(params, this.activeCase);
+          } else {
+            alert("Invalid UDL magnitude");
+          }
+        },
+        editAxle: function (index) {
+          var load = prompt("Please enter an axle load", this.cases[this.activeCase].axleLoads[index]);
+          if (!isNaN(load) && load >= 0 && load !== null) {
+            var distance = prompt("Please enter an axle distance", this.cases[this.activeCase].axles[index]);
+            if (!isNaN(distance) && distance >= 0 && distance !== null) {
+              this.cases[this.activeCase].axleLoads.splice(index, 1, load);
+              this.cases[this.activeCase].axles.splice(index, 1, distance);
+              var params = this.generateParams(this.cases[this.activeCase]);
+              this.analyzeConfiguration(params);
+              this.writeConfig(params, this.activeCase);
+            } else {
+              alert("Invalid axle distance");
+            }
+          } else {
+            alert("Invalid axle load");
+          }
+        },
+        addAxle: function () {
+          var load = prompt("Please enter an axle load", "");
+          if (!isNaN(load) && load >= 0 && load !== null) {
+            var distance = prompt("Please enter an axle distance", "");
+            if (!isNaN(distance) && distance >= 0 && distance !== null) {
+              this.cases[this.activeCase].axleLoads.push(load);
+              this.cases[this.activeCase].axles.push(distance);
+              var params = this.generateParams(this.cases[this.activeCase]);
+              this.analyzeConfiguration(params);
+              this.writeConfig(params, this.activeCase);
+            } else {
+              alert("Invalid axle distance");
+            }
+          } else {
+            alert("Invalid axle load");
+          }
+        },
+        deleteAxle: function (index) {
+          this.cases[this.activeCase].axleLoads.splice(index, 1);
+          this.cases[this.activeCase].axles.splice(index, 1);
+          var params = this.generateParams(this.cases[this.activeCase]);
+          this.analyzeConfiguration(params);
+          this.writeConfig(params, this.activeCase);
+        },
+        analyzeCases: function () {
+          for (let id in this.cases) {
+            params = this.generateParams(this.cases[id]);
+            this.analyzeConfiguration(params);
+            this.writeConfig(params, id);
+          }
+        },
+        updateSR: function (index) {
+          this.cases[this.activeCase].supportReleases.splice(index, 1, !this.cases[this.activeCase].supportReleases[index]);
+          var params = this.generateParams(this.cases[this.activeCase]);
+          this.analyzeConfiguration(params);
+          this.writeConfig(params, this.activeCase);
+        },
+        toggleEqualize: function () {
+          if (this.cases[this.activeCase].equalizeUDLs === true) {
+            var first = this.cases[this.activeCase].UDLs[0];
+            this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return first});
+          }
+          var params = this.generateParams(this.cases[this.activeCase]);
+          this.analyzeConfiguration(params);
+          this.writeConfig(params, this.activeCase);
+        },
+        generateParams: function(loadCase) {
+          var params = {};
+          params.spans = Object.assign([], this.project.spans);
+          params.divisions = Object.assign([], this.project.divisions);
+          params.globalSupportReleases = Object.assign([], this.project.globalSupportReleases);
+          params.UDLs = Object.assign([], loadCase.UDLs);
+          params.equalizeUDLs = false;
+          params.axles = Object.assign([], loadCase.axles);
+          params.axleLoads = Object.assign([], loadCase.axleLoads);
+          params.supportReleases = Object.assign([], loadCase.supportReleases);
+          params.supportDistances = this.supportDistances;
+          params.joints = this.joints;
+          params.shearMax = [];
+          params.shearMin = [];
+          params.momentMax = [];
+          params.momentMin = [];
+          params.bearingMax = [];
+          params.bearingMin = [];
+          params.supportMax = [];
+          params.supportMin = [];
+          return params;
+        },
+        writeConfig: function(params, id) {
+          this.cases[id].shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].momentMax = params.momentMax.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].momentMin = params.momentMin.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].supportMax = params.supportMax.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].bearingMax = params.bearingMax.map(function (value) {return (Math.round(value * 100) / 100)});
+          this.cases[id].bearingMin = params.bearingMin.map(function (value) {return (Math.round(value * 100) / 100)});
+        },
+        analyzeConfiguration: function (params) {
+          var spans = params.spans;
+          var axles= params.axles;
+          var axleLoads = params.axleLoads;
+          if (axles.length === 0) {axles=[0]; axleLoads = [0];}
+          var numberOfIncrements = Math.max(Math.round(_.sum(spans) + 0) * 2, 100);
+          var increment = (_.sum(spans) + _.max(axles)) / (numberOfIncrements - 1);
+          var a = 0; // Distance from first support to first vehicle axle
+          for (let i = 0; i < numberOfIncrements; i++) {
+            a = i * increment;
+            this.axleDistances(params, a);
+            this.axleSpans(params);
+            this.analyzeVehicle(params);
+            if (_.sum(axleLoads) === 0) {
+              break;
+            }
+          } // for i
+          axles = this.reverseVehicle(axles);
+          for (let i = 0; i < numberOfIncrements; i++) {
+            a = i * increment;
+            this.axleDistances(params, a);
+            this.axleSpans(params);
+            this.analyzeVehicle(params);
+            if (_.sum(axleLoads) === 0) {
+              break;
+            }
+          } // for i
+          this.updateChart();
+        },
+        axleDistances: function (params, a) {
+          var spans = params.spans;
+          var supportDistances = params.supportDistances;
+          var axles= params.axles;
+          var axleDistances = {a: [], b: [], c: []};
+          for (let i = 0; i < axles.length; i++) {
+            axleDistances.a[i] = a - axles[i];
+            axleDistances.b[i] = 0;
+            axleDistances.c[i] = 0;
+            for (let j = 0; j < spans.length; j++) {
+              if (axleDistances.a[i] >= supportDistances[j] && axleDistances.a[i] <= supportDistances[j + 1]) {
+                axleDistances.b[i] = axleDistances.a[i] - supportDistances[j];
+                axleDistances.c[i] = spans[j] - axleDistances.b[i];
+              }//if
+            }//for j
+          }//for i
+          params.axleDistances = axleDistances;
+        },
+        axleSpans: function (params) {
+          var spans = params.spans;
+          var supportDistances = params.supportDistances;
+          var axleDistances = params.axleDistances;
+          var axles= params.axles;
+          var axleSpans = [0];
+          for (let i = 0; i < axles.length; i++) {
+            for (let j = 0; j < spans.length; j++) {
+              if (axleDistances.a[i] >= supportDistances[j] && axleDistances.a[i] <= supportDistances[j + 1]) {
+                axleSpans[i] = j;
+              }//if
+            }
+          }
+          params.axleSpans = axleSpans;
+        },
+        analyzeVehicle: function (params) {
+          var joints= params.joints;
+          var globalSupportReleases= params.globalSupportReleases;
+          var supportReleases= params.supportReleases;
+          var shear = [];
+          var moment = [];
+          var releases = this.combineReleases(globalSupportReleases, supportReleases);
+          var shearMax = params.shearMax;
+          var shearMin = params.shearMin;
+          var momentMax = params.momentMax;
+          var momentMin = params.momentMin;
+          var bearingMax = params.bearingMax;
+          var bearingMin = params.bearingMin;
+          var supportMax = params.supportMax;
+          var supportMin = params.supportMin;
+
+          params.reactions = this.calculateReactions(params);
+
+          for (let i = 0; i < joints.length; i++) {
+            shear[i] = this.calculateShear(params, joints[i], joints[i + 1]);
+            moment[i] = this.calculateMoment(params, joints[i], joints[i + 1]);
+          }
+
+          for (let i = 0; i < joints.length; i++) {
+            //Initialize arrays with an initial value
+            if (shearMax[i] === undefined) {
+              shearMax[i] = shear[i];
+            }
+            if (shearMin[i] === undefined) {
+              shearMin[i] = shear[i];
+            }
+            if (momentMax[i] === undefined) {
+              momentMax[i] = moment[i];
+            }
+            if (momentMin[i] === undefined) {
+              momentMin[i] = moment[i];
+            }
+
+            //Compare shears
+            if (shear[i] >= shearMax[i]) {
+              shearMax[i] = shear[i];
+            }
+            if (shear[i] <= shearMin[i]) {
+              shearMin[i] = shear[i];
+            }
+
+            //Compare moments
+            if (moment[i] >= momentMax[i]) {
+              momentMax[i] = moment[i];
+            }
+            if (moment[i] <= momentMin[i]) {
+              momentMin[i] = moment[i];
+            }
+
+            //Clear shear and moment
+            shear[i] = 0;
+            moment[i] = 0;
+          }//for i
+
+          var bearings = this.reduceReactions(params.reactions, releases);
+
+          for (let i = 0; i < bearings.length; i++) {
+            //Initialize arrays with an initial value
+            if (bearingMax[i] === undefined) {
+              bearingMax[i] = bearings[i];
+              bearingMin[i] = bearings[i];
+            }
+            //Compare reactions
+            if (bearings[i] >= bearingMax[i]) {
+              bearingMax[i] = bearings[i];
+            }
+            if (bearings[i] <= bearingMin[i]) {
+              bearingMin[i] = bearings[i];
+            }
+          }//for i
+
+          var supports = this.reduceReactions(params.reactions);
+
+          for (let i = 0; i < supports.length; i++) {
+            //Initialize arrays with an initial value
+            if (supportMax[i] === undefined) {
+              supportMax[i] = supports[i];
+              supportMin[i] = supports[i];
+            }
+            //Compare reactions
+            if (supports[i] >= supportMax[i]) {
+              supportMax[i] = supports[i];
+            }
+            if (supports[i] <= supportMin[i]) {
+              supportMin[i] = supports[i];
+            }
+
+            //Clear reactions
+            params.reactions = params.reactions.map(function () {return 0;});
+          }//for i
+        },
+        reverseVehicle: function (axles) {
+          var axlesReversed = [];
+          var tempArray = [];
+          for (let i = 0; i < axles.length; i++) {
+            tempArray[i] = _.max(axles) - axles[i];
+          }
+          for (let i = 0; i < axles.length; i++) {
+            axlesReversed[i] = tempArray[i];
+          }
+          return axlesReversed;
+        },
+        reduceReactions: function(reactions, releases) {
+          var reduced = [];
+          for (let i = 0; i < reactions.length; i += 2) {
+            if (releases !== undefined) {
+              if (releases[i / 2] === true) {
+                reduced.push(reactions[i]);
+                reduced.push(reactions[i + 1]);
+              } else {
+                reduced.push(reactions[i] + reactions[i + 1]);
+              }
+            } else {
+              reduced.push(reactions[i] + reactions[i + 1]);
+            }
+          }
+          return (reduced);
+        },
+        combineReleases: function(global, local) {
+          return global.map(function (value, index) {
+            if (global[index] === true || local[index] === true) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        },
+        booleansToNumbers: function(booleans) {
+          var numbers = [];
+          for (var i = 0; i < booleans.length; i++) {
+            if (booleans[i]) {
+              numbers.push(i + 1);
+            }
+          }
+          return numbers;
+        },
+        calculateShear: function(params, x, x2) {
+          var spans = params.spans;
+          var axleDistances = params.axleDistances;
+          var supportDistances = params.supportDistances;
+          var axles= params.axles;
+          var axleLoads= params.axleLoads;
+          var UDLs= params.UDLs;
+          var reactions = this.reduceReactions(params.reactions);
+          var shear = 0;
+
+          if (_.sum(reactions) === 0) {
+            //do nothing
+          } else if (x === 0) {
+            shear = reactions[0];
+          } else if (Math.abs(x - _.sum(spans)) < 0.001) {
+            shear = -reactions[reactions.length - 1];
+          } else {
+            //Add reactions up to x
+            for (let i = 0; i < spans.length; i++) {
+              if (x >= supportDistances[i]) {
+                shear = shear + reactions[i];
+              }
+            }
+
+            //Add shear from axles
+            for (let i = 0; i < axles.length; i++) {
+              if (x > axleDistances.a[i] && axleDistances.a[i] >= 0) {
+                shear = shear - axleLoads[i];
+              }
+            }
+
+            //Add shear from UDLs
+            for (let i = 0; i < spans.length; i++) {
+              if (x > supportDistances[i] &&
+                  x2 >= supportDistances[i + 1] &&
+                  Math.abs(supportDistances[i + 1] - _.sum(spans)) > 0.001) {
+                if (UDLs[i] !== undefined) {shear = shear - UDLs[i] * spans[i];}
+              } else if (x > supportDistances[i] && x < supportDistances[i + 1]) {
+                if (UDLs[i] !== undefined) {shear = shear - UDLs[i] * (x - supportDistances[i]);}
+              }
+            }
+          }
+
+          const decimalPlaces = 2;
+          shear = Math.round(shear * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+
+          return shear;
+        },
+        calculateMoment: function(params, x, x2) {
+          var spans = params.spans;
+          var axleDistances = params.axleDistances;
+          var supportDistances = params.supportDistances;
+          var axles= params.axles;
+          var axleLoads= params.axleLoads;
+          var UDLs= params.UDLs;
+          var reactions = this.reduceReactions(params.reactions);
+          var moment = 0;
+
+          if (_.sum(reactions) === 0) {
+            //do nothing
+          } else if (x === 0) {
+            moment = 0;
+          } else if (x2 === undefined) {
+            moment = 0;
+          } else {
+            //Add reactions up to x
+            for (let i = 0; i < spans.length; i++) {
+              if (x >= supportDistances[i]) {
+                moment = moment + reactions[i] * (x - supportDistances[i]);
+              }
+            }
+
+            //Add moment from axles
+            for (let i = 0; i < axles.length; i++) {
+              if (x > axleDistances.a[i] && axleDistances.a[i] >= 0) {
+                moment = moment - axleLoads[i] * (x - axleDistances.a[i]);
+              }
+            }
+
+            //Add moment from UDLs
+            for (let i = 0; i < spans.length; i++) {
+              if (x > supportDistances[i] && x >= supportDistances[i + 1]) {
+                if (UDLs[i] !== undefined) {moment = moment - UDLs[i] * spans[i] * (x - supportDistances[i] - spans[i] / 2);}
+              } else if (x > supportDistances[i] && x < supportDistances[i + 1]) {
+                if (UDLs[i] !== undefined) {moment = moment - UDLs[i] * Math.pow(x - supportDistances[i], 2) / 2;}
+              }
+            }
+          }
+
+          const decimalPlaces = 2;
+          moment = Math.round(moment * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+
+          return moment;
+        },
+        calculateReactions: function(params) {
+          var spans = params.spans;
+          var globalSupportReleases= params.globalSupportReleases;
+          var supportReleases= params.supportReleases;
+          var numberOfColumns = (spans.length + 1) * 2;
+          var col1;
+          var col2;
+          var reactions = [];
+
+          for (let i = 0; i < numberOfColumns; i++) {
+            reactions[i] = 0;
+          }
+
+          //Add in global support releases
+          var releases = this.combineReleases(globalSupportReleases, supportReleases);
+          releases = this.booleansToNumbers(releases);
+
+          //Perform moment distribution
+          if (releases.length === 0) {
+            col1 = 0;
+            col2 = numberOfColumns - 1;
+            reactions = this.momentDistribution(params, reactions, col1, col2);
+          } else if (releases.length === 1) {
+            col1 = 0;
+            col2 = releases[0] * 2 - 1;
+            reactions = this.momentDistribution(params, reactions, col1, col2);
+            col1 = releases[0] * 2 - 2;
+            col2 = numberOfColumns - 1;
+            reactions = this.momentDistribution(params, reactions, col1, col2);
+          } else {
+            col1 = 0;
+            col2 = releases[0] * 2 - 1;
+            reactions = this.momentDistribution(params, reactions, col1, col2);
+            for (let i = 0; i < releases.length - 1; i++) {
+              col1 = releases[i] * 2 - 2;
+              col2 = releases[i + 1] * 2 - 1;
+              reactions = this.momentDistribution(params, reactions, col1, col2);
+            }
+            col1 = releases[releases.length - 1] * 2 - 2;
+            col2 = numberOfColumns - 1;
+            reactions = this.momentDistribution(params, reactions, col1, col2);
+          }
+          return reactions;
+        },
+        momentDistribution: function(params, reactions, col1, col2) {
+          var spans = params.spans;
+          var globalSupportReleases= params.globalSupportReleases;
+          var supportReleases= params.supportReleases;
+          var axleDistances = params.axleDistances;
+          var axleSpans = params.axleSpans;
+          var axleLoads= params.axleLoads;
+          var UDLs= params.UDLs;
+          var releases = this.combineReleases(globalSupportReleases, supportReleases);
+          releases = this.booleansToNumbers(releases);
+          var numberOfColumns = (spans.length + 1) * 2;
+          var DF = [];
+          var FEM = [];
+          var finalMoment = [];
+          var applied = [];
+          var distributed = [];
+          var table = [];
+          var integralDFs = [1, 1];
+
+          //Initalize arrays
+          for (let i = 0; i < numberOfColumns; i++) {
+            DF[i] = 0;
+            FEM[i] = 0;
+            finalMoment[i] = 0;
+            applied[i] = 0;
+            distributed[i] = 0;
+          }
+
+          for (let i = 0; i < 30; i++) {
+            table[i] = [];
+            for (let j = 0; j < numberOfColumns; j++) {
+              table[i][j] = 0;
+            }
+          }
+
+          // Calculate distribution factors
+          DF[1] = integralDFs[0];
+          DF[numberOfColumns - 2] = integralDFs[1];
+
+          for (let i = 2; i < numberOfColumns - 2; i++) {
+            if (i % 2 === 0) {
+              //i is even
+              DF[i] = (1 / spans[(i - 2) / 2]) / (1 / spans[(i - 2) / 2] + 1 / spans[i / 2]);
+              for (let j = 0; j < releases.length; j++) {
+                if (releases[j] === (i + 2) / 2) {
+                  DF[i] = 1;
+                }
+              } //for j
+            } else {
+              //i is odd
+              DF[i] = (1 / spans[(i - 1) / 2]) / (1 / spans[(i - 1) / 2] + 1 / spans[(i - 3) / 2]);
+              for (let j = 0; j < releases.length; j++) {
+                if (releases[j] === (i + 1) / 2) {
+                  DF[i] = 1;
+                }
+              } //for j
+            }
+          }
+
+          //Calculate fixed end moments
+          for (let i = 1; i < numberOfColumns - 1; i++) {
+            if (i % 2 === 0) {
+              //i is even
+              if (UDLs[(i - 2) / 2] !== undefined) {
+                FEM[i] = UDLs[(i - 2) / 2] * Math.pow(spans[(i - 2) / 2], 2) / 12;
+              }
+              for (let j = 0; j < axleLoads.length; j++) {
+                if (axleSpans[j] === (i - 2) / 2) {
+                  FEM[i] = FEM[i] +
+                    axleLoads[j] * Math.pow(axleDistances.b[j], 2) * axleDistances.c[j] / Math.pow(spans[(i - 2) / 2], 2);
+                }//if
+              }//for j
+            } else {
+              //i is odd
+              if (UDLs[(i - 1) / 2] !== undefined) {
+                FEM[i] = -UDLs[(i - 1) / 2] * Math.pow(spans[(i - 1) / 2], 2) / 12;
+              }
+              for (let j = 0; j < axleLoads.length; j++) {
+                if (axleSpans[j] === (i - 1) / 2) {
+                  FEM[i] = FEM[i] -
+                    axleLoads[j] * Math.pow(axleDistances.c[j], 2) * axleDistances.b[j] / Math.pow(spans[(i - 1) / 2], 2);
+                }//if
+              }//for j
+            }
+          }
+
+          //Add zeroes
+          for (let i = 0; i < col1 + 1; i++) {
+            DF[i] = 0;
+            FEM[i] = 0;
+          }
+
+          for (let i = col2; i < numberOfColumns; i++) {
+            DF[i] = 0;
+            FEM[i] = 0;
+          }
+
+          //Set up moment distribution table
+          for (let j = 0; j < numberOfColumns; j++) {
+            table[0][j] = FEM[j];
+          }
+
+          for (let i = 1; i < 30; i++) {
+            table[i][0] = 0;
+            table[i][numberOfColumns - 1] = 0;
+            if (i % 2 === 0) {
+              //i is even (calculate carryover moment)
+              for (let j = col1 + 1; j < col2; j++) {
+                if (j % 2 === 0) {
+                  //j is even
+                  table[i][j] = 0.5 * table[i - 1][j - 1];
+                } else {
+                  //j is odd
+                  table[i][j] = 0.5 * table[i - 1][j + 1];
+                }//if
+              }//for j
+            } else {
+              //i is odd (distribute unbalanced moment)
+              for (let j = col1 + 1; j < col2; j++) {
+                if (j % 2 === 0) {
+                  //j is even
+                  for (let k = 0; k < i; k++) {
+                    table[i][j] += table[k][j] * -DF[j];
+                    table[i][j] += table[k][j + 1] * -DF[j];
+                  }//for k
+                } else {
+                  //j is odd
+                  for (let k = 0; k < i; k++) {
+                    table[i][j] += table[k][j] * -DF[j];
+                    table[i][j] += table[k][j - 1] * -DF[j];
+                  }//for k
+                }//if
+              }//for j
+            }//if
+            if (_.max(table[i]) < 1 && -_.min(table[i]) < 0.00001) {
+              break;
+            }
+          }//for i
+
+          //Calculate final moment from distribution
+          for (let i = 0; i < table.length; i++) {
+            for (let j = col1; j < col2 + 1; j++) {
+              finalMoment[j] += table[i][j];
+            }
+          }
+
+          //Calculate reactions from distributed moment
+          for (let j = col1 + 1; j < col2; j++) {
+            if (j % 2 === 0) {
+              //j is even
+              distributed[j] += (finalMoment[j - 1] + finalMoment[j]) / spans[(j - 2) / 2];
+            } else {
+              //j is odd
+              distributed[j] += -1 * (finalMoment[j + 1] + finalMoment[j]) / spans[(j - 1) / 2];
+            }//if
+          }//for j
+
+          //Calculate support reactions from applied loads
+          for (let i = col1 + 1; i < col2; i++) {
+            if (i % 2 === 0) {
+              //j is even
+              if (UDLs[(i - 2) / 2] !== undefined) {
+                applied[i] += UDLs[(i - 2) / 2] * spans[(i - 2) / 2] / 2;
+              }
+              for (let j = 0; j < axleLoads.length; j++) {
+                if (axleSpans[j] === (i - 2) / 2) {
+                  applied[i] = applied[i] + axleLoads[j] * axleDistances.b[j] / spans[(i - 2) / 2];
+                }//if
+              }//for j
+            } else {
+              //j is odd
+              if (UDLs[(i - 1) / 2] !== undefined) {
+                applied[i] += UDLs[(i - 1) / 2] * spans[(i - 1) / 2] / 2;
+              }
+              for (let j = 0; j < axleLoads.length; j++) {
+                if (axleSpans[j] === (i - 1) / 2) {
+                  applied[i] = applied[i] + axleLoads[j] * axleDistances.c[j] / spans[(i - 1) / 2];
+                }//if
+              }//for j
+            }//if
+          }//for i
+
+
+          //Write bearing reactions
+          const decimalPlaces = 2;
+          for (let i = 0; i < numberOfColumns; i++) {
+            reactions[i] += Math.round((applied[i] +
+              distributed[i]) * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+          }
+
+          return reactions;
+        }
+      }
+    });
+  </script>
+  </body>
+</html>
