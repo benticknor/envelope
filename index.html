@@ -31,8 +31,7 @@
           <a class="button is-primary" v-on:click="addSpan()">Add Span</a>
         </div>
         <span class="title is-4">Report</span>
-        <div v-for="(loadCase, id) in cases">
-          <div>{{loadCase.name}}</div>
+        <div>
           <table class="table">
             <tbody>
               <tr>
@@ -44,10 +43,10 @@
                </tr>
               <tr v-for="(joint, index) in joints">
                 <td>{{ joint }}</td>
-                <td>{{loadCase.shearMax[index]}}</td>
-                <td>{{loadCase.shearMin[index]}}</td>
-                <td>{{loadCase.momentMax[index]}}</td>
-                <td>{{loadCase.momentMin[index]}}</td>
+                <td>{{this.shearMax[index]}}</td>
+                <td>{{this.shearMin[index]}}</td>
+                <td>{{this.momentMax[index]}}</td>
+                <td>{{this.momentMin[index]}}</td>
               </tr>
             </tbody>
           </table>
@@ -60,8 +59,8 @@
                </tr>
               <tr v-for="(support, index) in supports">
                 <td>{{ support }}</td>
-                <td>{{loadCase.supportMax[index]}}</td>
-                <td>{{loadCase.supportMin[index]}}</td>
+                <td>{{this.supportMax[index]}}</td>
+                <td>{{this.supportMin[index]}}</td>
               </tr>
             </tbody>
           </table>
@@ -76,12 +75,12 @@
       data: {
         spans: [ 10 ],
         divisions: [ 10 ],
-        cases: {},
-        activeCase: "",
-        route: "spans",
-        type: "All",
-        displayDivisions: false,
-        loaded: true
+        shearMax: [],
+        shearMin: [],
+        momentMax: [],
+        momentMin: [],
+        supportMax: [],
+        supportMin: []
       },
       computed: {
         supportDistances: function () {
@@ -125,16 +124,8 @@
           if (!isNaN(length) && length >= 0 && length !== null) {
             this.spans.push(length);
             this.divisions.push(10);
-            for (let id in this.cases) {
-              if (this.cases[id].equalizeUDLs) {
-                this.cases[id].UDLs.push(this.cases[id].UDLs[0]);
-              } else {
-                this.cases[id].UDLs.push(0);
-              }
-              params = this.generateParams(this.cases[id]);
-              this.analyzeConfiguration(params);
-              this.writeConfig(params, id);
-            }
+            params = this.generateParams();
+            this.analyzeConfiguration(params);
           } else {
             alert("Invalid span length");
           }
@@ -143,34 +134,24 @@
           var params = {};
           this.spans.splice(index, 1);
           this.divisions.splice(index, 1);
-          for (let id in this.cases) {
-            this.cases[id].UDLs.splice(index, 1);
-            params = this.generateParams(this.cases[id]);
-            this.analyzeConfiguration(params);
-            this.writeConfig(params, id);
-          }
+          params = this.generateParams();
+          this.analyzeConfiguration(params);
         },
         editSpan: function (index) {
           var length = prompt("Please enter a span length", this.spans[index]);
           var params = {};
           if (!isNaN(length) && length >= 0 && length !== null) {
             this.spans.splice(index, 1, length);
-            for (let id in this.cases) {
-              params = this.generateParams(this.cases[id]);
-              this.analyzeConfiguration(params);
-              this.writeConfig(params, id);
-            }
+            params = this.generateParams();
+            this.analyzeConfiguration(params);
           } else {
             alert("Invalid span length");
           }
           var div = prompt("Please enter a number of points", this.divisions[index]);
           if (!isNaN(div) && div >= 0 && div !== null) {
             this.divisions.splice(index, 1, div);
-            for (let id in this.cases) {
-              params = this.generateParams(this.cases[id]);
-              this.analyzeConfiguration(params);
-              this.writeConfig(params, id);
-            }
+            params = this.generateParams();
+            this.analyzeConfiguration(params);
           } else {
             alert("Invalid number of points");
           }
@@ -178,105 +159,54 @@
         editDivision: function (number, index) {
           var params = {};
           this.divisions.splice(index, 1, number);
-          for (let id in this.cases) {
-            params = this.generateParams(this.cases[id]);
-            this.analyzeConfiguration(params);
-            this.writeConfig(params, id);
-          }
-        },
-        addConfiguration: function () {
-          var name = prompt("Please enter a configuration name", "");
-          var id = Math.random().toString(36).substring(7);
-          Vue.set(this.cases, id, {
-            name: name,
-            type: 'Configuration',
-            axles: [],
-            axleLoads: [],
-            UDLs: this.spans.map(function () {return 0;}),
-            equalizeUDLs: false,
-            entries: [],
-            factors: [],
-            shearMax: [],
-            shearMin: [],
-            momentMax: [],
-            momentMin: [],
-            bearingMax: [],
-            bearingMin: [],
-            supportMax: [],
-            supportMin: []
-          });
-          this.activeCase = id;
-          var params = this.generateParams(this.cases[id]);
+          params = this.generateParams();
           this.analyzeConfiguration(params);
-          this.writeConfig(params, id);
         },
-        deleteCase: function (id) {
-          Vue.delete(this.cases, id);
-        },
-        analyzeCases: function () {
-          for (let id in this.cases) {
-            params = this.generateParams(this.cases[id]);
-            this.analyzeConfiguration(params);
-            this.writeConfig(params, id);
-          }
-        },
-        generateParams: function(loadCase) {
+        generateParams: function() {
           var params = {};
-          params.spans = Object.assign([], this.spans);
           params.divisions = Object.assign([], this.divisions);
-          params.UDLs = Object.assign([], loadCase.UDLs);
+          params.UDLs = Object.assign([], this.UDLs); //fix
           params.equalizeUDLs = false;
-          params.axles = Object.assign([], loadCase.axles);
-          params.axleLoads = Object.assign([], loadCase.axleLoads);
+          //params.axles = Object.assign([], this.axles);
+          //params.axleLoads = Object.assign([], this.axleLoads);
           params.supportDistances = this.supportDistances;
           params.joints = this.joints;
           params.shearMax = [];
           params.shearMin = [];
           params.momentMax = [];
           params.momentMin = [];
-          params.bearingMax = [];
-          params.bearingMin = [];
           params.supportMax = [];
           params.supportMin = [];
           return params;
         },
-        writeConfig: function(params, id) {
-          this.cases[id].shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].momentMax = params.momentMax.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].momentMin = params.momentMin.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].supportMax = params.supportMax.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].bearingMax = params.bearingMax.map(function (value) {return (Math.round(value * 100) / 100);});
-          this.cases[id].bearingMin = params.bearingMin.map(function (value) {return (Math.round(value * 100) / 100);});
-        },
         analyzeConfiguration: function (params) {
-          var spans = params.spans;
+          var spans = this.spans;
           var axles= params.axles;
           var axleLoads = params.axleLoads;
-          if (axles.length === 0) {axles=[0]; axleLoads = [0];}
-          var numberOfIncrements = Math.max(Math.round(_.sum(spans) + 0) * 2, 100);
-          var increment = (_.sum(spans) + _.max(axles)) / (numberOfIncrements - 1);
-          var a = 0; // Distance from first support to first vehicle axle
-          for (let i = 0; i < numberOfIncrements; i++) {
-            a = i * increment;
-            this.axleDistances(params, a);
-            this.axleSpans(params);
+          if (axles.length === 0) {
+            axles=[0]; axleLoads = [0];
             this.analyzeVehicle(params);
-            if (_.sum(axleLoads) === 0) {
-              break;
+          } else {
+            var numberOfIncrements = Math.max(Math.round(_.sum(spans)) * 2, 200);
+            var increment = (_.sum(spans) + _.max(axles)) / (numberOfIncrements - 1);
+            params.position = 0; //Distance from first support to first vehicle axle
+            for (let i = 0; i < numberOfIncrements; i++) {
+              params.position = i * increment;
+              this.analyzeVehicle(params);
             }
-          } // for i
-          axles = this.reverseVehicle(axles);
-          for (let i = 0; i < numberOfIncrements; i++) {
-            a = i * increment;
-            this.axleDistances(params, a);
-            this.axleSpans(params);
-            this.analyzeVehicle(params);
-            if (_.sum(axleLoads) === 0) {
-              break;
+            params.axles = this.reverseAxles(axles);
+            params.axleLoads = _.reverse(axleLoads);
+            for (let i = 0; i < numberOfIncrements; i++) {
+              params.position = i * increment;
+              this.analyzeVehicle(params);
             }
-          } // for i
+          }
+          this.shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.momentMax = params.momentMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.momentMin = params.momentMin.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.supportMax = params.supportMax.map(function (value) {return (Math.round(value * 100) / 100);});
+          this.supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100);});
         },
         axleDistances: function (params, a) {
           var spans = params.spans;
@@ -312,80 +242,77 @@
           params.axleSpans = axleSpans;
         },
         analyzeVehicle: function (params) {
-          var joints= params.joints;
-          var shear = [];
-          var moment = [];
-          var shearMax = params.shearMax;
-          var shearMin = params.shearMin;
-          var momentMax = params.momentMax;
-          var momentMin = params.momentMin;
-          var bearingMax = params.bearingMax;
-          var bearingMin = params.bearingMin;
-          var supportMax = params.supportMax;
-          var supportMin = params.supportMin;
+          var UDLs = params.UDLs;
+          var axles = params.axles;
+          var axleLoads = params.axleLoads;
 
-          params.reactions = this.calculateReactions(params);
+          var reactions = this.analyzeReactions(params);
+          var bearingReactions = this.analyzeBearingReactions(reactions, releases);
+          var supportReactions = this.analyzeSupportReactions(reactions, releases);
 
-          for (let i = 0; i < joints.length; i++) {
-            shear[i] = this.calculateShear(params, joints[i], joints[i + 1]);
-            moment[i] = this.calculateMoment(params, joints[i], joints[i + 1]);
-          }
+          var shear = _.flatten(this.project.spans.map((spanValue, spanIndex) => {
+            return Array(this.project.divisions[spanIndex] + 1).fill(0).map((divValue, divIndex) => {
+              var result = 0;
+              //add shear from reactions
+              supportReactions.forEach((reactionValue, reactionIndex) => {
+                if (reactionIndex <= spanIndex) {
+                  result += reactionValue;
+                }
+              });
+              //subtract shear from UDLs
+              UDLs.forEach((UDLValue, UDLIndex) => {
+                if (UDLIndex < spanIndex) {
+                  result -= this.project.spans[UDLIndex] * UDLValue;
+                }
+              });
+              result -= (UDLs[spanIndex] * spanValue / this.project.divisions[spanIndex] * divIndex);
+              //subtract shear from axles
+              axles.forEach((axleValue, axleIndex) => {
+                var axleDistance = params.position - axleValue;
+                var divStart = this.supportDistances[spanIndex] + spanValue / this.project.divisions[spanIndex] * divIndex;
+                if (axleDistance <= divStart && axleDistance >= 0) {
+                  result -= axleLoads[axleIndex];
+                }
+              });
+              return result;
+            });
+          }));
+          var moment = _.flatten(this.project.spans.map((spanValue, spanIndex) => {
+            return Array(this.project.divisions[spanIndex] + 1).fill(0).map((divValue, divIndex) => {
+              var result = 0;
+              var divStart = this.supportDistances[spanIndex] + spanValue / this.project.divisions[spanIndex] * divIndex;
+              //add moments from reactions
+              supportReactions.forEach((reactionValue, reactionIndex) => {
+                if (reactionIndex <= spanIndex) {
+                  result += reactionValue * (divStart - this.supportDistances[reactionIndex]);
+                }
+              });
+              //subtract moments from UDLs
+              UDLs.forEach((UDLValue, UDLIndex) => {
+                if (UDLIndex < spanIndex) {
+                  result -= this.project.spans[UDLIndex] * UDLValue *  (divStart - (this.supportDistances[UDLIndex] + this.project.spans[UDLIndex] / 2));
+                }
+              });
+                result -= UDLs[spanIndex] * Math.pow(spanValue / this.project.divisions[spanIndex] * divIndex, 2) / 2;
+              //subtract moment from axles
+              axles.forEach((axleValue, axleIndex) => {
+                var axleDistance = params.position - axleValue;
+                if (axleDistance <= divStart && axleDistance >= 0) {
+                  result -= axleLoads[axleIndex] * (divStart - axleDistance);
+                }
+              });
+              return result;
+            });
+          }));
 
-          for (let i = 0; i < joints.length; i++) {
-            //Initialize arrays with an initial value
-            if (shearMax[i] === undefined) {
-              shearMax[i] = shear[i];
-            }
-            if (shearMin[i] === undefined) {
-              shearMin[i] = shear[i];
-            }
-            if (momentMax[i] === undefined) {
-              momentMax[i] = moment[i];
-            }
-            if (momentMin[i] === undefined) {
-              momentMin[i] = moment[i];
-            }
-
-            //Compare shears
-            if (shear[i] >= shearMax[i]) {
-              shearMax[i] = shear[i];
-            }
-            if (shear[i] <= shearMin[i]) {
-              shearMin[i] = shear[i];
-            }
-
-            //Compare moments
-            if (moment[i] >= momentMax[i]) {
-              momentMax[i] = moment[i];
-            }
-            if (moment[i] <= momentMin[i]) {
-              momentMin[i] = moment[i];
-            }
-
-            //Clear shear and moment
-            shear[i] = 0;
-            moment[i] = 0;
-          }//for i
-
-          var supports = this.reduceReactions(params.reactions);
-
-          for (let i = 0; i < supports.length; i++) {
-            //Initialize arrays with an initial value
-            if (supportMax[i] === undefined) {
-              supportMax[i] = supports[i];
-              supportMin[i] = supports[i];
-            }
-            //Compare reactions
-            if (supports[i] >= supportMax[i]) {
-              supportMax[i] = supports[i];
-            }
-            if (supports[i] <= supportMin[i]) {
-              supportMin[i] = supports[i];
-            }
-
-            //Clear reactions
-            params.reactions = params.reactions.map(function () {return 0;});
-          }//for i
+          params.shearMax = params.shearMax.map((value, index) => Math.max(value, shear[index]));
+          params.shearMin = params.shearMin.map((value, index) => Math.min(value, shear[index]));
+          params.momentMax = params.momentMax.map((value, index) => Math.max(value, moment[index]));
+          params.momentMin = params.momentMin.map((value, index) => Math.min(value, moment[index]));
+          params.bearingMax = params.bearingMax.map((value, index) => Math.max(value, bearingReactions[index]));
+          params.bearingMin = params.bearingMin.map((value, index) => Math.min(value, bearingReactions[index]));
+          params.supportMax = params.supportMax.map((value, index) => Math.max(value, supportReactions[index]));
+          params.supportMin = params.supportMin.map((value, index) => Math.min(value, supportReactions[index]));
         },
         reverseVehicle: function (axles) {
           var axlesReversed = [];
@@ -398,7 +325,7 @@
           }
           return axlesReversed;
         },
-        reduceReactions: function(reactionsExtended) {
+        analyzeSupportReactions: function(reactionsExtended) {
           var supportReactions = [];
           var index = 0;
            this.supports.forEach(() => {
@@ -413,15 +340,6 @@
             }
           });
           return supportReactions;
-        },
-        booleansToNumbers: function(booleans) {
-          var numbers = [];
-          for (var i = 0; i < booleans.length; i++) {
-            if (booleans[i]) {
-              numbers.push(i + 1);
-            }
-          }
-          return numbers;
         },
         calculateShear: function(params, x, x2) {
           var spans = params.spans;
@@ -519,7 +437,7 @@
         },
         calculateReactions: function(params) {
           var spans = this.spans;
-          var UDLs = this.cases[params.id].UDLs;
+          var UDLs = params.UDLs;
           var axles = params.axles;
           var axleLoads = params.axleLoads;
 
