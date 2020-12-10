@@ -20,7 +20,7 @@
       <div class="main" v-cloak>
         <span class="title is-4">Spans</span>
         <div class="field is-grouped is-grouped-multiline">
-          <div class="control" v-for="(span, index) in project.spans">
+          <div class="control" v-for="(span, index) in spans">
             <div class="tags has-addons">
               <a class="tag is-link" v-on:click="editSpan(index)">{{ span }}</a>
               <a class="tag is-delete" v-on:click="deleteSpan(index)"></a>
@@ -74,12 +74,8 @@
     var app = new Vue({
       el: '#app',
       data: {
-        project: {
-          name: "Project 1",
-          spans: [ 10 ],
-          divisions: [ 10 ],
-          globalSupportReleases: [ false, false ]
-        },
+        spans: [ 10 ],
+        divisions: [ 10 ],
         cases: {},
         activeCase: "",
         route: "spans",
@@ -90,7 +86,7 @@
       computed: {
         supportDistances: function () {
           var cumulative = 0;
-          var supportDistances = this.project.spans.map(function (value) {
+          var supportDistances = this.spans.map(function (value) {
             cumulative = Number(cumulative) + Number(value);
             return cumulative;
           });
@@ -98,8 +94,8 @@
           return supportDistances;
         },
         joints: function () {
-          var spans = this.project.spans;
-          var divisions = this.project.divisions;
+          var spans = this.spans;
+          var divisions = this.divisions;
           var supportDistances = this.supportDistances;
           var decimalPlaces = _.max(spans.map(function (value) {
             if (value.toString().split('.')[1] !== undefined) {
@@ -120,89 +116,21 @@
         },
         supports: function () {
           return this.supportDistances.map(function (value, index) {return index + 1;});
-        },
-        filteredCases: function () {
-          return _.pickBy(this.cases, function(value) {
-            return (this.type === 'All' || value.type === this.type);
-          }.bind(this));
         }
       },
       methods: {
-        openDivisions: function () {
-          this.displayDivisions = true;
-        },
-        closeDivisions: function () {
-          this.displayDivisions = false;
-        },
-        editCase: function(id) {
-          this.activeCase = id;
-          this.route = "editCase";
-        },
-        updateType: function (name) {
-          this.type = name;
-        },
-        updateRoute: function (page) {
-          this.route = page;
-        },
-        updateChart: function () {
-          var drawChart = function () {
-            var shearData = new google.visualization.DataTable();
-            shearData.addColumn('number', 'Joint');
-            shearData.addColumn('number', 'Min Shear');
-            shearData.addColumn('number', 'Max Shear');
-            shearData.addRows(this.joints.map(function (value, index) {
-              return [
-                value,
-                this.cases[this.activeCase].shearMin[index],
-                this.cases[this.activeCase].shearMax[index]
-              ];
-            }.bind(this)));
-            var momentData = new google.visualization.DataTable();
-            momentData.addColumn('number', 'Joint');
-            momentData.addColumn('number', 'Min Moment');
-            momentData.addColumn('number', 'Max Moment');
-            momentData.addRows(this.joints.map(function (value, index) {
-              return [
-                value,
-                this.cases[this.activeCase].momentMin[index],
-                this.cases[this.activeCase].momentMax[index]
-              ];
-            }.bind(this)));
-            var reactionData = google.visualization.arrayToDataTable([
-              ['Year', 'Sales', 'Expenses', 'Profit'],
-              ['2014', 1000, 400, 200],
-              ['2015', 1170, 460, 250],
-              ['2016', 660, 1120, 300],
-              ['2017', 1030, 540, 350]
-            ]);
-            var options = {
-              width: 500,
-              height: 200
-            };
-            var shearChart = new google.charts.Line(this.$refs.shearChart);
-            shearChart.draw(shearData, google.charts.Line.convertOptions(options));
-            var momentChart = new google.charts.Line(this.$refs.momentChart);
-            momentChart.draw(momentData, google.charts.Line.convertOptions(options));
-            var reactionChart = new google.charts.Bar(this.$refs.reactionChart);
-            reactionChart.draw(reactionData, google.charts.Bar.convertOptions(options));
-          }.bind(this);
-          google.charts.load('current', {'packages':['line']});
-          google.charts.setOnLoadCallback(drawChart);
-        },
         addSpan: function () {
           var length = prompt("Please enter a span length", "");
           var params = {};
           if (!isNaN(length) && length >= 0 && length !== null) {
-            this.project.spans.push(length);
-            this.project.divisions.push(10);
-            this.project.globalSupportReleases.push(false);
+            this.spans.push(length);
+            this.divisions.push(10);
             for (let id in this.cases) {
               if (this.cases[id].equalizeUDLs) {
                 this.cases[id].UDLs.push(this.cases[id].UDLs[0]);
               } else {
                 this.cases[id].UDLs.push(0);
               }
-              this.cases[id].supportReleases.push(false);
               params = this.generateParams(this.cases[id]);
               this.analyzeConfiguration(params);
               this.writeConfig(params, id);
@@ -213,22 +141,20 @@
         },
         deleteSpan: function (index) {
           var params = {};
-          this.project.spans.splice(index, 1);
-          this.project.divisions.splice(index, 1);
-          this.project.globalSupportReleases.splice(index + 1, 1);
+          this.spans.splice(index, 1);
+          this.divisions.splice(index, 1);
           for (let id in this.cases) {
             this.cases[id].UDLs.splice(index, 1);
-            this.cases[id].supportReleases.splice(index + 1, 1);
             params = this.generateParams(this.cases[id]);
             this.analyzeConfiguration(params);
             this.writeConfig(params, id);
           }
         },
         editSpan: function (index) {
-          var length = prompt("Please enter a span length", this.project.spans[index]);
+          var length = prompt("Please enter a span length", this.spans[index]);
           var params = {};
           if (!isNaN(length) && length >= 0 && length !== null) {
-            this.project.spans.splice(index, 1, length);
+            this.spans.splice(index, 1, length);
             for (let id in this.cases) {
               params = this.generateParams(this.cases[id]);
               this.analyzeConfiguration(params);
@@ -237,9 +163,9 @@
           } else {
             alert("Invalid span length");
           }
-          var div = prompt("Please enter a number of points", this.project.divisions[index]);
+          var div = prompt("Please enter a number of points", this.divisions[index]);
           if (!isNaN(div) && div >= 0 && div !== null) {
-            this.project.divisions.splice(index, 1, div);
+            this.divisions.splice(index, 1, div);
             for (let id in this.cases) {
               params = this.generateParams(this.cases[id]);
               this.analyzeConfiguration(params);
@@ -251,23 +177,11 @@
         },
         editDivision: function (number, index) {
           var params = {};
-          this.project.divisions.splice(index, 1, number);
+          this.divisions.splice(index, 1, number);
           for (let id in this.cases) {
             params = this.generateParams(this.cases[id]);
             this.analyzeConfiguration(params);
             this.writeConfig(params, id);
-          }
-        },
-        addCase: function() {
-          switch(this.type) {
-            case 'Envelope':
-              this.addEnvelope();
-              break;
-            case 'Combination':
-              this.addCombination();
-              break;
-            default:
-              this.addConfiguration();
           }
         },
         addConfiguration: function () {
@@ -278,9 +192,8 @@
             type: 'Configuration',
             axles: [],
             axleLoads: [],
-            UDLs: this.project.spans.map(function () {return 0;}),
+            UDLs: this.spans.map(function () {return 0;}),
             equalizeUDLs: false,
-            supportReleases: [ false, false ],
             entries: [],
             factors: [],
             shearMax: [],
@@ -296,120 +209,9 @@
           var params = this.generateParams(this.cases[id]);
           this.analyzeConfiguration(params);
           this.writeConfig(params, id);
-          this.route = "editCase";
-        },
-        addEnvelope: function () {
-          var name = prompt("Please enter an envelope name", "");
-          var id = Math.random().toString(36).substring(7);
-          Vue.set(this.cases, id, {
-            name: name,
-            type: 'Envelope',
-            axles: [],
-            axleLoads: [],
-            UDLs: [],
-            equalizeUDLs: false,
-            supportReleases: [ false, false ],
-            entries: [],
-            factors: [],
-            shearMax: [],
-            shearMin: [],
-            momentMax: [],
-            momentMin: [],
-            bearingMax: [],
-            bearingMin: [],
-            supportMax: [],
-            supportMin: []
-          });
-          this.activeCase = id;
-          this.route = "editCase";
-        },
-        addCombination: function () {
-          var name = prompt("Please enter a combination name", "");
-          var id = Math.random().toString(36).substring(7);
-          Vue.set(this.cases, id, {
-            name: name,
-            type: 'Combination',
-            axles: [],
-            axleLoads: [],
-            UDLs: [],
-            equalizeUDLs: false,
-            supportReleases: [],
-            entries: [],
-            factors: [],
-            shearMax: [],
-            shearMin: [],
-            momentMax: [],
-            momentMin: [],
-            bearingMax: [],
-            bearingMin: [],
-            supportMax: [],
-            supportMin: []
-          });
-          this.activeCase = id;
-          this.route = "editCase";
         },
         deleteCase: function (id) {
           Vue.delete(this.cases, id);
-        },
-        renameCase: function () {
-          var name = prompt("Please enter a case name", this.cases[this.activeCase].name);
-          this.cases[this.activeCase].name = name;
-        },
-        editUDL: function (index) {
-          var UDL = prompt("Please enter a UDL magnitude", this.cases[this.activeCase].UDLs[index]);
-          if (!isNaN(UDL) && UDL >= 0) {
-            if (this.cases[this.activeCase].equalizeUDLs) {
-              this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return UDL;});
-            } else {
-              this.cases[this.activeCase].UDLs.splice(index, 1, UDL);
-            }
-            var params = this.generateParams(this.cases[this.activeCase]);
-            this.analyzeConfiguration(params);
-            this.writeConfig(params, this.activeCase);
-          } else {
-            alert("Invalid UDL magnitude");
-          }
-        },
-        editAxle: function (index) {
-          var load = prompt("Please enter an axle load", this.cases[this.activeCase].axleLoads[index]);
-          if (!isNaN(load) && load >= 0 && load !== null) {
-            var distance = prompt("Please enter an axle distance", this.cases[this.activeCase].axles[index]);
-            if (!isNaN(distance) && distance >= 0 && distance !== null) {
-              this.cases[this.activeCase].axleLoads.splice(index, 1, load);
-              this.cases[this.activeCase].axles.splice(index, 1, distance);
-              var params = this.generateParams(this.cases[this.activeCase]);
-              this.analyzeConfiguration(params);
-              this.writeConfig(params, this.activeCase);
-            } else {
-              alert("Invalid axle distance");
-            }
-          } else {
-            alert("Invalid axle load");
-          }
-        },
-        addAxle: function () {
-          var load = prompt("Please enter an axle load", "");
-          if (!isNaN(load) && load >= 0 && load !== null) {
-            var distance = prompt("Please enter an axle distance", "");
-            if (!isNaN(distance) && distance >= 0 && distance !== null) {
-              this.cases[this.activeCase].axleLoads.push(load);
-              this.cases[this.activeCase].axles.push(distance);
-              var params = this.generateParams(this.cases[this.activeCase]);
-              this.analyzeConfiguration(params);
-              this.writeConfig(params, this.activeCase);
-            } else {
-              alert("Invalid axle distance");
-            }
-          } else {
-            alert("Invalid axle load");
-          }
-        },
-        deleteAxle: function (index) {
-          this.cases[this.activeCase].axleLoads.splice(index, 1);
-          this.cases[this.activeCase].axles.splice(index, 1);
-          var params = this.generateParams(this.cases[this.activeCase]);
-          this.analyzeConfiguration(params);
-          this.writeConfig(params, this.activeCase);
         },
         analyzeCases: function () {
           for (let id in this.cases) {
@@ -418,31 +220,14 @@
             this.writeConfig(params, id);
           }
         },
-        updateSR: function (index) {
-          this.cases[this.activeCase].supportReleases.splice(index, 1, !this.cases[this.activeCase].supportReleases[index]);
-          var params = this.generateParams(this.cases[this.activeCase]);
-          this.analyzeConfiguration(params);
-          this.writeConfig(params, this.activeCase);
-        },
-        toggleEqualize: function () {
-          if (this.cases[this.activeCase].equalizeUDLs === true) {
-            var first = this.cases[this.activeCase].UDLs[0];
-            this.cases[this.activeCase].UDLs = this.cases[this.activeCase].UDLs.map(function () {return first;});
-          }
-          var params = this.generateParams(this.cases[this.activeCase]);
-          this.analyzeConfiguration(params);
-          this.writeConfig(params, this.activeCase);
-        },
         generateParams: function(loadCase) {
           var params = {};
-          params.spans = Object.assign([], this.project.spans);
-          params.divisions = Object.assign([], this.project.divisions);
-          params.globalSupportReleases = Object.assign([], this.project.globalSupportReleases);
+          params.spans = Object.assign([], this.spans);
+          params.divisions = Object.assign([], this.divisions);
           params.UDLs = Object.assign([], loadCase.UDLs);
           params.equalizeUDLs = false;
           params.axles = Object.assign([], loadCase.axles);
           params.axleLoads = Object.assign([], loadCase.axleLoads);
-          params.supportReleases = Object.assign([], loadCase.supportReleases);
           params.supportDistances = this.supportDistances;
           params.joints = this.joints;
           params.shearMax = [];
@@ -492,7 +277,6 @@
               break;
             }
           } // for i
-          this.updateChart();
         },
         axleDistances: function (params, a) {
           var spans = params.spans;
@@ -529,11 +313,8 @@
         },
         analyzeVehicle: function (params) {
           var joints= params.joints;
-          var globalSupportReleases= params.globalSupportReleases;
-          var supportReleases= params.supportReleases;
           var shear = [];
           var moment = [];
-          var releases = this.combineReleases(globalSupportReleases, supportReleases);
           var shearMax = params.shearMax;
           var shearMin = params.shearMin;
           var momentMax = params.momentMax;
@@ -586,23 +367,6 @@
             moment[i] = 0;
           }//for i
 
-          var bearings = this.reduceReactions(params.reactions, releases);
-
-          for (let i = 0; i < bearings.length; i++) {
-            //Initialize arrays with an initial value
-            if (bearingMax[i] === undefined) {
-              bearingMax[i] = bearings[i];
-              bearingMin[i] = bearings[i];
-            }
-            //Compare reactions
-            if (bearings[i] >= bearingMax[i]) {
-              bearingMax[i] = bearings[i];
-            }
-            if (bearings[i] <= bearingMin[i]) {
-              bearingMin[i] = bearings[i];
-            }
-          }//for i
-
           var supports = this.reduceReactions(params.reactions);
 
           for (let i = 0; i < supports.length; i++) {
@@ -634,30 +398,21 @@
           }
           return axlesReversed;
         },
-        reduceReactions: function(reactions, releases) {
-          var reduced = [];
-          for (let i = 0; i < reactions.length; i += 2) {
-            if (releases !== undefined) {
-              if (releases[i / 2] === true) {
-                reduced.push(reactions[i]);
-                reduced.push(reactions[i + 1]);
-              } else {
-                reduced.push(reactions[i] + reactions[i + 1]);
-              }
+        reduceReactions: function(reactionsExtended) {
+          var supportReactions = [];
+          var index = 0;
+           this.supports.forEach(() => {
+            if (index === 0 || index === reactionsExtended.length - 1) {
+              //end support
+              supportReactions.push(reactionsExtended[index]);
+              index ++;
             } else {
-              reduced.push(reactions[i] + reactions[i + 1]);
-            }
-          }
-          return (reduced);
-        },
-        combineReleases: function(global, local) {
-          return global.map(function (value, index) {
-            if (global[index] === true || local[index] === true) {
-              return true;
-            } else {
-              return false;
+              //interior support
+              supportReactions.push(reactionsExtended[index] + reactionsExtended[index + 1]);
+              index += 2;
             }
           });
+          return supportReactions;
         },
         booleansToNumbers: function(booleans) {
           var numbers = [];
@@ -763,240 +518,126 @@
           return moment;
         },
         calculateReactions: function(params) {
-          var spans = params.spans;
-          var globalSupportReleases= params.globalSupportReleases;
-          var supportReleases= params.supportReleases;
-          var numberOfColumns = (spans.length + 1) * 2;
-          var col1;
-          var col2;
-          var reactions = [];
+          var spans = this.spans;
+          var UDLs = this.cases[params.id].UDLs;
+          var axles = params.axles;
+          var axleLoads = params.axleLoads;
 
-          for (let i = 0; i < numberOfColumns; i++) {
-            reactions[i] = 0;
-          }
-
-          //Add in global support releases
-          var releases = this.combineReleases(globalSupportReleases, supportReleases);
-          releases = this.booleansToNumbers(releases);
-
-          //Perform moment distribution
-          if (releases.length === 0) {
-            col1 = 0;
-            col2 = numberOfColumns - 1;
-            reactions = this.momentDistribution(params, reactions, col1, col2);
-          } else if (releases.length === 1) {
-            col1 = 0;
-            col2 = releases[0] * 2 - 1;
-            reactions = this.momentDistribution(params, reactions, col1, col2);
-            col1 = releases[0] * 2 - 2;
-            col2 = numberOfColumns - 1;
-            reactions = this.momentDistribution(params, reactions, col1, col2);
-          } else {
-            col1 = 0;
-            col2 = releases[0] * 2 - 1;
-            reactions = this.momentDistribution(params, reactions, col1, col2);
-            for (let i = 0; i < releases.length - 1; i++) {
-              col1 = releases[i] * 2 - 2;
-              col2 = releases[i + 1] * 2 - 1;
-              reactions = this.momentDistribution(params, reactions, col1, col2);
+          var spansExpanded = Array(spans.length * 2).fill(0);
+          var UDLsExpanded = Array(spans.length * 2).fill(0);
+          spans.forEach((value, index) => {
+            spansExpanded[index * 2] = value;
+            spansExpanded[index * 2 + 1] = value;
+            UDLsExpanded[index * 2] = UDLs[index];
+            UDLsExpanded[index * 2 + 1] = UDLs[index];
+          });
+          var fixedEndMoments = [];
+          //add moments from UDLs
+          spansExpanded.forEach((value, index) => {
+            if (index % 2 === 0) {
+              //index is even
+              fixedEndMoments[index] = -UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) /12;
+            } else {
+              //index is odd
+              fixedEndMoments[index] = UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) / 12;
             }
-            col1 = releases[releases.length - 1] * 2 - 2;
-            col2 = numberOfColumns - 1;
-            reactions = this.momentDistribution(params, reactions, col1, col2);
-          }
-          return reactions;
-        },
-        momentDistribution: function(params, reactions, col1, col2) {
-          var spans = params.spans;
-          var globalSupportReleases= params.globalSupportReleases;
-          var supportReleases= params.supportReleases;
-          var axleDistances = params.axleDistances;
-          var axleSpans = params.axleSpans;
-          var axleLoads= params.axleLoads;
-          var UDLs= params.UDLs;
-          var releases = this.combineReleases(globalSupportReleases, supportReleases);
-          releases = this.booleansToNumbers(releases);
-          var numberOfColumns = (spans.length + 1) * 2;
-          var DF = [];
-          var FEM = [];
-          var finalMoment = [];
-          var applied = [];
-          var distributed = [];
+          });
+          //add moments from axles
+          axles.forEach((axle, index) => {
+            var axleDistance = params.position - axle;
+            var spanIndex = this.supportDistances.findIndex((distance) => {
+              return distance > axleDistance;
+            }) - 1;
+            if (axleDistance >= 0) {
+              var a = params.position - axle - this.supportDistances[spanIndex];
+              var b = this.spans[spanIndex] - a;
+              fixedEndMoments[spanIndex * 2] -= axleLoads[index] * b * b * a / Math.pow(this.spans[spanIndex], 2);
+              fixedEndMoments[spanIndex * 2 + 1] += axleLoads[index] * a * a * b / Math.pow(this.spans[spanIndex], 2);
+            }
+          });
+          var releasesExtended = [];
+          var i = 0;
+          this.supports.forEach((value, index) => {
+            if (index == 0 || index == this.supports.length - 1) {
+              releasesExtended[i] = true;
+              i++;
+            } else {
+              releasesExtended[i] = false;
+              releasesExtended[i + 1] = false;
+              i += 2;
+            }
+          });
+          var distributionFactors = releasesExtended.map((value, index) => {
+            if (value) {
+              return 0;
+            } else {
+              if (index % 2 === 0) {
+                //index is even
+                return spansExpanded[index - 1]/(Number(spansExpanded[index]) + Number(spansExpanded[index - 1]));
+              } else {
+                //index is odd
+                return spansExpanded[index + 1]/(Number(spansExpanded[index]) + Number(spansExpanded[index + 1]));
+              }
+            }
+          });
           var table = [];
-          var integralDFs = [1, 1];
-
-          //Initalize arrays
-          for (let i = 0; i < numberOfColumns; i++) {
-            DF[i] = 0;
-            FEM[i] = 0;
-            finalMoment[i] = 0;
-            applied[i] = 0;
-            distributed[i] = 0;
-          }
-
-          for (let i = 0; i < 30; i++) {
+          table[0] = Object.assign([], fixedEndMoments);
+          for (let i = 1; i < 200; i++) {
+            //release
             table[i] = [];
-            for (let j = 0; j < numberOfColumns; j++) {
-              table[i][j] = 0;
-            }
-          }
-
-          // Calculate distribution factors
-          DF[1] = integralDFs[0];
-          DF[numberOfColumns - 2] = integralDFs[1];
-
-          for (let i = 2; i < numberOfColumns - 2; i++) {
-            if (i % 2 === 0) {
-              //i is even
-              DF[i] = (1 / spans[(i - 2) / 2]) / (1 / spans[(i - 2) / 2] + 1 / spans[i / 2]);
-              for (let j = 0; j < releases.length; j++) {
-                if (releases[j] === (i + 2) / 2) {
-                  DF[i] = 1;
-                }
-              } //for j
-            } else {
-              //i is odd
-              DF[i] = (1 / spans[(i - 1) / 2]) / (1 / spans[(i - 1) / 2] + 1 / spans[(i - 3) / 2]);
-              for (let j = 0; j < releases.length; j++) {
-                if (releases[j] === (i + 1) / 2) {
-                  DF[i] = 1;
-                }
-              } //for j
-            }
-          }
-
-          //Calculate fixed end moments
-          for (let i = 1; i < numberOfColumns - 1; i++) {
-            if (i % 2 === 0) {
-              //i is even
-              if (UDLs[(i - 2) / 2] !== undefined) {
-                FEM[i] = UDLs[(i - 2) / 2] * Math.pow(spans[(i - 2) / 2], 2) / 12;
+            releasesExtended.forEach((value, index) => {
+              if (value === true) {
+                table[i][index] = -table[i - 1][index];
+              } else if (index % 2 === 0) {
+                //index is even
+                table[i][index] = -(table[i - 1][index] + table[i - 1][Number(index) - 1]) * distributionFactors[index];
+              } else {
+                //index is odd
+                table[i][index] = -(table[i - 1][index] + table[i - 1][Number(index) + 1]) * distributionFactors[index];
               }
-              for (let j = 0; j < axleLoads.length; j++) {
-                if (axleSpans[j] === (i - 2) / 2) {
-                  FEM[i] = FEM[i] +
-                    axleLoads[j] * Math.pow(axleDistances.b[j], 2) * axleDistances.c[j] / Math.pow(spans[(i - 2) / 2], 2);
-                }//if
-              }//for j
-            } else {
-              //i is odd
-              if (UDLs[(i - 1) / 2] !== undefined) {
-                FEM[i] = -UDLs[(i - 1) / 2] * Math.pow(spans[(i - 1) / 2], 2) / 12;
+            });
+            //carryover
+            i++;
+            table[i] = [];
+            releasesExtended.forEach((value, index) => {
+              if (index % 2 === 0) {
+                //index is even
+                table[i][index] = 0.5 * table[i - 1][Number(index) + 1];
+              } else {
+                //index is odd
+                table[i][index] = 0.5 * table[i - 1][Number(index) - 1];
               }
-              for (let j = 0; j < axleLoads.length; j++) {
-                if (axleSpans[j] === (i - 1) / 2) {
-                  FEM[i] = FEM[i] -
-                    axleLoads[j] * Math.pow(axleDistances.c[j], 2) * axleDistances.b[j] / Math.pow(spans[(i - 1) / 2], 2);
-                }//if
-              }//for j
-            }
-          }
-
-          //Add zeroes
-          for (let i = 0; i < col1 + 1; i++) {
-            DF[i] = 0;
-            FEM[i] = 0;
-          }
-
-          for (let i = col2; i < numberOfColumns; i++) {
-            DF[i] = 0;
-            FEM[i] = 0;
-          }
-
-          //Set up moment distribution table
-          for (let j = 0; j < numberOfColumns; j++) {
-            table[0][j] = FEM[j];
-          }
-
-          for (let i = 1; i < 30; i++) {
-            table[i][0] = 0;
-            table[i][numberOfColumns - 1] = 0;
-            if (i % 2 === 0) {
-              //i is even (calculate carryover moment)
-              for (let j = col1 + 1; j < col2; j++) {
-                if (j % 2 === 0) {
-                  //j is even
-                  table[i][j] = 0.5 * table[i - 1][j - 1];
-                } else {
-                  //j is odd
-                  table[i][j] = 0.5 * table[i - 1][j + 1];
-                }//if
-              }//for j
-            } else {
-              //i is odd (distribute unbalanced moment)
-              for (let j = col1 + 1; j < col2; j++) {
-                if (j % 2 === 0) {
-                  //j is even
-                  for (let k = 0; k < i; k++) {
-                    table[i][j] += table[k][j] * -DF[j];
-                    table[i][j] += table[k][j + 1] * -DF[j];
-                  }//for k
-                } else {
-                  //j is odd
-                  for (let k = 0; k < i; k++) {
-                    table[i][j] += table[k][j] * -DF[j];
-                    table[i][j] += table[k][j - 1] * -DF[j];
-                  }//for k
-                }//if
-              }//for j
-            }//if
-            if (_.max(table[i]) < 1 && -_.min(table[i]) < 0.00001) {
-              break;
-            }
+            });
           }//for i
-
-          //Calculate final moment from distribution
-          for (let i = 0; i < table.length; i++) {
-            for (let j = col1; j < col2 + 1; j++) {
-              finalMoment[j] += table[i][j];
+          var sum = (r, a) => r.map((b, i) => a[i] + b);
+          var internalMoments = table.reduce(sum);
+          var internalReactions = internalMoments.map((value, index) => {
+            if (index % 2 === 0) {
+              //index is even
+              return -1 * (value + internalMoments[index + 1]) / spansExpanded[index];
+            } else {
+              //index is odd
+              return (value + internalMoments[index - 1]) / spansExpanded[index];
             }
-          }
+          });
+          //add reactions from UDLs
+          var externalReactions = spansExpanded.map((value, index) => value * UDLsExpanded[index]/2);
+          //add reactions from axles
+          axles.forEach((axle, index) => {
+            var axleDistance = params.position - axle;
+            var spanIndex = this.supportDistances.findIndex((distance) => {
+              return distance > axleDistance;
+            }) - 1;
+            if (axleDistance >= 0) {
+              var a = params.position - axle - this.supportDistances[spanIndex];
+              var b = this.spans[spanIndex] - a;
+              externalReactions[spanIndex * 2] += axleLoads[index] * b / this.spans[spanIndex];
+              externalReactions[spanIndex * 2 + 1] += axleLoads[index] * a /this.spans[spanIndex];
+            }
+          });
+          var reactionsExtended = internalReactions.map((value, index) => value + externalReactions[index]);
 
-          //Calculate reactions from distributed moment
-          for (let j = col1 + 1; j < col2; j++) {
-            if (j % 2 === 0) {
-              //j is even
-              distributed[j] += (finalMoment[j - 1] + finalMoment[j]) / spans[(j - 2) / 2];
-            } else {
-              //j is odd
-              distributed[j] += -1 * (finalMoment[j + 1] + finalMoment[j]) / spans[(j - 1) / 2];
-            }//if
-          }//for j
-
-          //Calculate support reactions from applied loads
-          for (let i = col1 + 1; i < col2; i++) {
-            if (i % 2 === 0) {
-              //j is even
-              if (UDLs[(i - 2) / 2] !== undefined) {
-                applied[i] += UDLs[(i - 2) / 2] * spans[(i - 2) / 2] / 2;
-              }
-              for (let j = 0; j < axleLoads.length; j++) {
-                if (axleSpans[j] === (i - 2) / 2) {
-                  applied[i] = applied[i] + axleLoads[j] * axleDistances.b[j] / spans[(i - 2) / 2];
-                }//if
-              }//for j
-            } else {
-              //j is odd
-              if (UDLs[(i - 1) / 2] !== undefined) {
-                applied[i] += UDLs[(i - 1) / 2] * spans[(i - 1) / 2] / 2;
-              }
-              for (let j = 0; j < axleLoads.length; j++) {
-                if (axleSpans[j] === (i - 1) / 2) {
-                  applied[i] = applied[i] + axleLoads[j] * axleDistances.c[j] / spans[(i - 1) / 2];
-                }//if
-              }//for j
-            }//if
-          }//for i
-
-
-          //Write bearing reactions
-          const decimalPlaces = 2;
-          for (let i = 0; i < numberOfColumns; i++) {
-            reactions[i] += Math.round((applied[i] +
-              distributed[i]) * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
-          }
-
-          return reactions;
+          return reactionsExtended;
         }
       }
     });
