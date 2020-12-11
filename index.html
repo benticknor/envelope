@@ -13,12 +13,29 @@
       [v-cloak] {
         display: none;
       }
+      .input {
+        width: 80px;
+      }
     </style>
   </head>
   <body>
     <div id="app">
       <div class="main" v-cloak>
         <span class="title is-4">Spans</span>
+        <div class="field">
+          <div class="control">
+            <input class="input" v-model.number="span1">
+            <input class="input" v-model.number="span2">
+            <input class="input" v-model.number="span3">
+            <input class="input" v-model.number="span4">
+            <input class="input" v-model.number="span5">
+            <input class="input" v-model.number="span6">
+            <input class="input" v-model.number="span7">
+            <input class="input" v-model.number="span8">
+            <input class="input" v-model.number="span9">
+            <input class="input" v-model.number="span10">
+          </div>
+        </div>
         <div class="field is-grouped is-grouped-multiline">
           <div class="control" v-for="(span, index) in spans">
             <div class="tags has-addons">
@@ -43,10 +60,10 @@
                </tr>
               <tr v-for="(joint, index) in joints">
                 <td>{{ joint }}</td>
-                <td>{{this.shearMax[index]}}</td>
-                <td>{{this.shearMin[index]}}</td>
-                <td>{{this.momentMax[index]}}</td>
-                <td>{{this.momentMin[index]}}</td>
+                <td>{{shearMax[index]}}</td>
+                <td>{{shearMin[index]}}</td>
+                <td>{{momentMax[index]}}</td>
+                <td>{{momentMin[index]}}</td>
               </tr>
             </tbody>
           </table>
@@ -59,8 +76,8 @@
                </tr>
               <tr v-for="(support, index) in supports">
                 <td>{{ support }}</td>
-                <td>{{this.supportMax[index]}}</td>
-                <td>{{this.supportMin[index]}}</td>
+                <td>{{supportMax[index]}}</td>
+                <td>{{supportMin[index]}}</td>
               </tr>
             </tbody>
           </table>
@@ -73,6 +90,16 @@
     var app = new Vue({
       el: '#app',
       data: {
+        span1: 10,
+        span2: 10,
+        span3: 10,
+        span4: 0,
+        span5: 0,
+        span6: 0,
+        span7: 0,
+        span8: 0,
+        span9: 0,
+        span10: 0,
         spans: [ 10 ],
         divisions: [ 10 ],
         shearMax: [],
