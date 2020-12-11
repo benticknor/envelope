@@ -36,17 +36,6 @@
             <input class="input" v-model.number="span10">
           </div>
         </div>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="control" v-for="(span, index) in spans">
-            <div class="tags has-addons">
-              <a class="tag is-link" v-on:click="editSpan(index)">{{ span }}</a>
-              <a class="tag is-delete" v-on:click="deleteSpan(index)"></a>
-            </div>
-          </div>
-        </div>
-        <div class="buttons">
-          <a class="button is-primary" v-on:click="addSpan()">Add Span</a>
-        </div>
         <span class="title is-4">Report</span>
         <div>
           <table class="table">
@@ -100,8 +89,7 @@
         span8: 0,
         span9: 0,
         span10: 0,
-        spans: [ 10 ],
-        divisions: [ 10 ],
+        divisions: 10,
         shearMax: [],
         shearMin: [],
         momentMax: [],
@@ -110,6 +98,10 @@
         supportMin: []
       },
       computed: {
+        spans: function () {
+          var spans = [this.span1, this.span2, this.span3, this.span4, this.span5, this.span6, this.span7, this.span8, this.span9, this.span10];
+          return spans.filter(Number);
+        },
         supportDistances: function () {
           var cumulative = 0;
           var supportDistances = this.spans.map(function (value) {
@@ -131,8 +123,8 @@
             }
           }));
           var joints = _.uniq(_.flatten(spans.map(function (span, spanIndex) {
-            return Array(divisions[spanIndex] + 1).fill(0).map(function (val, index) {
-              return supportDistances[spanIndex] + span/divisions[spanIndex] * index;
+            return Array(divisions + 1).fill(0).map(function (val, index) {
+              return supportDistances[spanIndex] + span/divisions * index;
             });
           })));
           joints = joints.map(function (value) {
@@ -145,50 +137,6 @@
         }
       },
       methods: {
-        addSpan: function () {
-          var length = prompt("Please enter a span length", "");
-          var params = {};
-          if (!isNaN(length) && length >= 0 && length !== null) {
-            this.spans.push(length);
-            this.divisions.push(10);
-            params = this.generateParams();
-            this.analyzeConfiguration(params);
-          } else {
-            alert("Invalid span length");
-          }
-        },
-        deleteSpan: function (index) {
-          var params = {};
-          this.spans.splice(index, 1);
-          this.divisions.splice(index, 1);
-          params = this.generateParams();
-          this.analyzeConfiguration(params);
-        },
-        editSpan: function (index) {
-          var length = prompt("Please enter a span length", this.spans[index]);
-          var params = {};
-          if (!isNaN(length) && length >= 0 && length !== null) {
-            this.spans.splice(index, 1, length);
-            params = this.generateParams();
-            this.analyzeConfiguration(params);
-          } else {
-            alert("Invalid span length");
-          }
-          var div = prompt("Please enter a number of points", this.divisions[index]);
-          if (!isNaN(div) && div >= 0 && div !== null) {
-            this.divisions.splice(index, 1, div);
-            params = this.generateParams();
-            this.analyzeConfiguration(params);
-          } else {
-            alert("Invalid number of points");
-          }
-        },
-        editDivision: function (number, index) {
-          var params = {};
-          this.divisions.splice(index, 1, number);
-          params = this.generateParams();
-          this.analyzeConfiguration(params);
-        },
         generateParams: function() {
           var params = {};
           params.divisions = Object.assign([], this.divisions);
@@ -277,8 +225,8 @@
           var bearingReactions = this.analyzeBearingReactions(reactions, releases);
           var supportReactions = this.analyzeSupportReactions(reactions, releases);
 
-          var shear = _.flatten(this.project.spans.map((spanValue, spanIndex) => {
-            return Array(this.project.divisions[spanIndex] + 1).fill(0).map((divValue, divIndex) => {
+          var shear = _.flatten(this.spans.map((spanValue, spanIndex) => {
+            return Array(this.divisions + 1).fill(0).map((divValue, divIndex) => {
               var result = 0;
               //add shear from reactions
               supportReactions.forEach((reactionValue, reactionIndex) => {
@@ -289,14 +237,14 @@
               //subtract shear from UDLs
               UDLs.forEach((UDLValue, UDLIndex) => {
                 if (UDLIndex < spanIndex) {
-                  result -= this.project.spans[UDLIndex] * UDLValue;
+                  result -= this.spans[UDLIndex] * UDLValue;
                 }
               });
-              result -= (UDLs[spanIndex] * spanValue / this.project.divisions[spanIndex] * divIndex);
+              result -= (UDLs[spanIndex] * spanValue / this.divisions * divIndex);
               //subtract shear from axles
               axles.forEach((axleValue, axleIndex) => {
                 var axleDistance = params.position - axleValue;
-                var divStart = this.supportDistances[spanIndex] + spanValue / this.project.divisions[spanIndex] * divIndex;
+                var divStart = this.supportDistances[spanIndex] + spanValue / this.divisions * divIndex;
                 if (axleDistance <= divStart && axleDistance >= 0) {
                   result -= axleLoads[axleIndex];
                 }
@@ -304,10 +252,10 @@
               return result;
             });
           }));
-          var moment = _.flatten(this.project.spans.map((spanValue, spanIndex) => {
-            return Array(this.project.divisions[spanIndex] + 1).fill(0).map((divValue, divIndex) => {
+          var moment = _.flatten(this.spans.map((spanValue, spanIndex) => {
+            return Array(this.divisions + 1).fill(0).map((divValue, divIndex) => {
               var result = 0;
-              var divStart = this.supportDistances[spanIndex] + spanValue / this.project.divisions[spanIndex] * divIndex;
+              var divStart = this.supportDistances[spanIndex] + spanValue / this.divisions * divIndex;
               //add moments from reactions
               supportReactions.forEach((reactionValue, reactionIndex) => {
                 if (reactionIndex <= spanIndex) {
@@ -317,10 +265,10 @@
               //subtract moments from UDLs
               UDLs.forEach((UDLValue, UDLIndex) => {
                 if (UDLIndex < spanIndex) {
-                  result -= this.project.spans[UDLIndex] * UDLValue *  (divStart - (this.supportDistances[UDLIndex] + this.project.spans[UDLIndex] / 2));
+                  result -= this.spans[UDLIndex] * UDLValue *  (divStart - (this.supportDistances[UDLIndex] + this.spans[UDLIndex] / 2));
                 }
               });
-                result -= UDLs[spanIndex] * Math.pow(spanValue / this.project.divisions[spanIndex] * divIndex, 2) / 2;
+                result -= UDLs[spanIndex] * Math.pow(spanValue / this.divisions * divIndex, 2) / 2;
               //subtract moment from axles
               axles.forEach((axleValue, axleIndex) => {
                 var axleDistance = params.position - axleValue;
@@ -461,128 +409,6 @@
           moment = Math.round(moment * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
 
           return moment;
-        },
-        calculateReactions: function(params) {
-          var spans = this.spans;
-          var UDLs = params.UDLs;
-          var axles = params.axles;
-          var axleLoads = params.axleLoads;
-
-          var spansExpanded = Array(spans.length * 2).fill(0);
-          var UDLsExpanded = Array(spans.length * 2).fill(0);
-          spans.forEach((value, index) => {
-            spansExpanded[index * 2] = value;
-            spansExpanded[index * 2 + 1] = value;
-            UDLsExpanded[index * 2] = UDLs[index];
-            UDLsExpanded[index * 2 + 1] = UDLs[index];
-          });
-          var fixedEndMoments = [];
-          //add moments from UDLs
-          spansExpanded.forEach((value, index) => {
-            if (index % 2 === 0) {
-              //index is even
-              fixedEndMoments[index] = -UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) /12;
-            } else {
-              //index is odd
-              fixedEndMoments[index] = UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) / 12;
-            }
-          });
-          //add moments from axles
-          axles.forEach((axle, index) => {
-            var axleDistance = params.position - axle;
-            var spanIndex = this.supportDistances.findIndex((distance) => {
-              return distance > axleDistance;
-            }) - 1;
-            if (axleDistance >= 0) {
-              var a = params.position - axle - this.supportDistances[spanIndex];
-              var b = this.spans[spanIndex] - a;
-              fixedEndMoments[spanIndex * 2] -= axleLoads[index] * b * b * a / Math.pow(this.spans[spanIndex], 2);
-              fixedEndMoments[spanIndex * 2 + 1] += axleLoads[index] * a * a * b / Math.pow(this.spans[spanIndex], 2);
-            }
-          });
-          var releasesExtended = [];
-          var i = 0;
-          this.supports.forEach((value, index) => {
-            if (index == 0 || index == this.supports.length - 1) {
-              releasesExtended[i] = true;
-              i++;
-            } else {
-              releasesExtended[i] = false;
-              releasesExtended[i + 1] = false;
-              i += 2;
-            }
-          });
-          var distributionFactors = releasesExtended.map((value, index) => {
-            if (value) {
-              return 0;
-            } else {
-              if (index % 2 === 0) {
-                //index is even
-                return spansExpanded[index - 1]/(Number(spansExpanded[index]) + Number(spansExpanded[index - 1]));
-              } else {
-                //index is odd
-                return spansExpanded[index + 1]/(Number(spansExpanded[index]) + Number(spansExpanded[index + 1]));
-              }
-            }
-          });
-          var table = [];
-          table[0] = Object.assign([], fixedEndMoments);
-          for (let i = 1; i < 200; i++) {
-            //release
-            table[i] = [];
-            releasesExtended.forEach((value, index) => {
-              if (value === true) {
-                table[i][index] = -table[i - 1][index];
-              } else if (index % 2 === 0) {
-                //index is even
-                table[i][index] = -(table[i - 1][index] + table[i - 1][Number(index) - 1]) * distributionFactors[index];
-              } else {
-                //index is odd
-                table[i][index] = -(table[i - 1][index] + table[i - 1][Number(index) + 1]) * distributionFactors[index];
-              }
-            });
-            //carryover
-            i++;
-            table[i] = [];
-            releasesExtended.forEach((value, index) => {
-              if (index % 2 === 0) {
-                //index is even
-                table[i][index] = 0.5 * table[i - 1][Number(index) + 1];
-              } else {
-                //index is odd
-                table[i][index] = 0.5 * table[i - 1][Number(index) - 1];
-              }
-            });
-          }//for i
-          var sum = (r, a) => r.map((b, i) => a[i] + b);
-          var internalMoments = table.reduce(sum);
-          var internalReactions = internalMoments.map((value, index) => {
-            if (index % 2 === 0) {
-              //index is even
-              return -1 * (value + internalMoments[index + 1]) / spansExpanded[index];
-            } else {
-              //index is odd
-              return (value + internalMoments[index - 1]) / spansExpanded[index];
-            }
-          });
-          //add reactions from UDLs
-          var externalReactions = spansExpanded.map((value, index) => value * UDLsExpanded[index]/2);
-          //add reactions from axles
-          axles.forEach((axle, index) => {
-            var axleDistance = params.position - axle;
-            var spanIndex = this.supportDistances.findIndex((distance) => {
-              return distance > axleDistance;
-            }) - 1;
-            if (axleDistance >= 0) {
-              var a = params.position - axle - this.supportDistances[spanIndex];
-              var b = this.spans[spanIndex] - a;
-              externalReactions[spanIndex * 2] += axleLoads[index] * b / this.spans[spanIndex];
-              externalReactions[spanIndex * 2 + 1] += axleLoads[index] * a /this.spans[spanIndex];
-            }
-          });
-          var reactionsExtended = internalReactions.map((value, index) => value + externalReactions[index]);
-
-          return reactionsExtended;
         }
       }
     });
