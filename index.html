@@ -98,7 +98,6 @@
         supportMin: []
       },
       mounted: function () {
-        console.log("mounted");
         this.analyze();
       },
       computed: {
@@ -143,7 +142,6 @@
       },
       methods: {
         analyze: function () {
-          console.log("start analysis");
           var spans = this.spans;
           
           //create placeholder for parameters
@@ -152,14 +150,12 @@
           params.axleLoads = [];
           params.UDLs = [];
           params.position = 0;
-          params.shearMax = [];
-          params.shearMin = [];
-          params.momentMax = [];
-          params.momentMin = [];
-          params.supportMax = [];
-          params.supportMin = [];
-          
-          
+          params.shearMax = this.joints.map(() => -1000000),
+          params.shearMin = this.joints.map(() => 1000000),
+          params.momentMax = this.joints.map(() => -1000000),
+          params.momentMin = this.joints.map(() => 1000000),
+          params.supportMax = this.supports.map(() => -1000000),
+          params.supportMin = this.supports.map(() => 1000000),
           
           //analyze each vehicle configuration
           
@@ -171,14 +167,13 @@
           var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 200);
           var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
-          
-          
           for (let i = 0; i < numberOfIncrements; i++) {
             params.position = i * increment;
             this.analyzeVehicle(params);
           }
-          params.axles = this.reverseAxles(axles);
-          params.axleLoads = _.reverse(axleLoads);
+          
+          params.axles = this.reverseAxles(params.axles);
+          params.axleLoads = _.reverse(params.axleLoads);
           
           for (let i = 0; i < numberOfIncrements; i++) {
             params.position = i * increment;
@@ -327,7 +322,7 @@
           
           var reactions = this.analyzeReactions(params);
           var supportReactions = this.analyzeSupportReactions(reactions);
-
+          
           var shear = _.flatten(this.spans.map((spanValue, spanIndex) => {
             return Array(this.divisions + 1).fill(0).map((divValue, divIndex) => {
               var result = 0;
@@ -355,6 +350,7 @@
               return result;
             });
           }));
+          
           var moment = _.flatten(this.spans.map((spanValue, spanIndex) => {
             return Array(this.divisions + 1).fill(0).map((divValue, divIndex) => {
               var result = 0;
@@ -416,7 +412,16 @@
             }
           });
           return supportReactions;
-        }
+        },
+        reverseAxles: function (axles) {
+          var maxAxle = _.max(axles);
+          var axlesReversed = Object.assign([], axles);
+          axlesReversed = _.reverse(axlesReversed);
+          axlesReversed = axlesReversed.map((axle) => {
+            return Math.abs(axle - maxAxle);
+          });
+          return axlesReversed;
+        },
       }
     });
   </script>
