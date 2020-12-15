@@ -24,16 +24,16 @@
         <span class="title is-4">Spans</span>
         <div class="field">
           <div class="control">
-            <input class="input" v-model.number="span1">
-            <input class="input" v-model.number="span2">
-            <input class="input" v-model.number="span3">
-            <input class="input" v-model.number="span4">
-            <input class="input" v-model.number="span5">
-            <input class="input" v-model.number="span6">
-            <input class="input" v-model.number="span7">
-            <input class="input" v-model.number="span8">
-            <input class="input" v-model.number="span9">
-            <input class="input" v-model.number="span10">
+            <input class="input" v-model.number.lazy="span1" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span2" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span3" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span4" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span5" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span6" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span7" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span8" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span9" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span10" v-on:change="analyze">
           </div>
         </div>
         <span class="title is-4">Report</span>
@@ -80,8 +80,8 @@
       el: '#app',
       data: {
         span1: 10,
-        span2: 10,
-        span3: 10,
+        span2: 0,
+        span3: 0,
         span4: 0,
         span5: 0,
         span6: 0,
@@ -103,8 +103,7 @@
       computed: {
         spans: function () {
           var spans = [this.span1, this.span2, this.span3, this.span4, this.span5, this.span6, this.span7, this.span8, this.span9, this.span10];
-          //return spans.filter(Number);
-          return [10];
+          return spans.filter(Number);
         },
         supportDistances: function () {
           var cumulative = 0;
@@ -126,11 +125,11 @@
               return 2;
             }
           }));
-          var joints = _.uniq(_.flatten(this.spans.map(function (span, spanIndex) {
+          var joints = _.flatten(this.spans.map(function (span, spanIndex) {
             return Array(divisions + 1).fill(0).map(function (val, index) {
               return supportDistances[spanIndex] + span/divisions * index;
             });
-          })));
+          }));
           joints = joints.map(function (value) {
             return Math.round(value * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
           });
@@ -143,12 +142,13 @@
       methods: {
         analyze: function () {
           var spans = this.spans;
+          console.log(spans)
           
           //create placeholder for parameters
           var params = {};
           params.axles = [];
           params.axleLoads = [];
-          params.UDLs = [];
+          // params.UDLs = [];
           params.position = 0;
           params.shearMax = this.joints.map(() => -1000000),
           params.shearMin = this.joints.map(() => 1000000),
@@ -162,7 +162,7 @@
           //full vehicle with 1.25 dla
           params.axles= [0];
           params.axleLoads = [100];
-          params.UDLs = [0]
+          // params.UDLs = [0]
           
           var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 200);
           var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
@@ -188,7 +188,7 @@
           this.supportMin = params.supportMin.map(function (value) {return (Math.round(value * 100) / 100);});
         },
         analyzeReactions: function(params) {
-          var UDLs = params.UDLs;
+          // var UDLs = params.UDLs;
           var axles = params.axles;
           var axleLoads = params.axleLoads;
           
@@ -197,21 +197,21 @@
           this.spans.forEach((value, index) => {
             spansExpanded[index * 2] = value;
             spansExpanded[index * 2 + 1] = value;
-            UDLsExpanded[index * 2] = UDLs[index];
-            UDLsExpanded[index * 2 + 1] = UDLs[index];
+            // UDLsExpanded[index * 2] = UDLs[index];
+            // UDLsExpanded[index * 2 + 1] = UDLs[index];
           });
           
-          var fixedEndMoments = [];
+          var fixedEndMoments = Array(this.spans.length * 2).fill(0);;
           //add moments from UDLs
-          spansExpanded.forEach((value, index) => {
-            if (index % 2 === 0) {
-              //index is even
-              fixedEndMoments[index] = -UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) /12;
-            } else {
-              //index is odd
-              fixedEndMoments[index] = UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) / 12;
-            }
-          });
+          // spansExpanded.forEach((value, index) => {
+          //   if (index % 2 === 0) {
+          //     //index is even
+          //     fixedEndMoments[index] = -UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) /12;
+          //   } else {
+          //     //index is odd
+          //     fixedEndMoments[index] = UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) / 12;
+          //   }
+          // });
           
           //add moments from axles
           axles.forEach((axle, index) => {
@@ -282,7 +282,8 @@
             }
           });
           //add reactions from UDLs
-          var externalReactions = spansExpanded.map((value, index) => value * UDLsExpanded[index]/2);
+          var externalReactions = Array(this.spans.length * 2).fill(0);
+          // var externalReactions = spansExpanded.map((value, index) => value * UDLsExpanded[index]/2);
           //add reactions from axles
           axles.forEach((axle, index) => {
             var axleDistance = params.position - axle;
@@ -333,12 +334,12 @@
                 }
               });
               //subtract shear from UDLs
-              UDLs.forEach((UDLValue, UDLIndex) => {
-                if (UDLIndex < spanIndex) {
-                  result -= this.spans[UDLIndex] * UDLValue;
-                }
-              });
-              result -= (UDLs[spanIndex] * spanValue / this.divisions * divIndex);
+              // UDLs.forEach((UDLValue, UDLIndex) => {
+              //   if (UDLIndex < spanIndex) {
+              //     result -= this.spans[UDLIndex] * UDLValue;
+              //   }
+              // });
+              // result -= (UDLs[spanIndex] * spanValue / this.divisions * divIndex);
               //subtract shear from axles
               axles.forEach((axleValue, axleIndex) => {
                 var axleDistance = params.position - axleValue;
@@ -362,12 +363,12 @@
                 }
               });
               //subtract moments from UDLs
-              UDLs.forEach((UDLValue, UDLIndex) => {
-                if (UDLIndex < spanIndex) {
-                  result -= this.spans[UDLIndex] * UDLValue *  (divStart - (this.supportDistances[UDLIndex] + this.spans[UDLIndex] / 2));
-                }
-              });
-                result -= UDLs[spanIndex] * Math.pow(spanValue / this.divisions * divIndex, 2) / 2;
+              // UDLs.forEach((UDLValue, UDLIndex) => {
+              //   if (UDLIndex < spanIndex) {
+              //     result -= this.spans[UDLIndex] * UDLValue *  (divStart - (this.supportDistances[UDLIndex] + this.spans[UDLIndex] / 2));
+              //   }
+              // });
+              //   result -= UDLs[spanIndex] * Math.pow(spanValue / this.divisions * divIndex, 2) / 2;
               //subtract moment from axles
               axles.forEach((axleValue, axleIndex) => {
                 var axleDistance = params.position - axleValue;
