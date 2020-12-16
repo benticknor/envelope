@@ -79,9 +79,9 @@
     var app = new Vue({
       el: '#app',
       data: {
-        span1: 10,
-        span2: 0,
-        span3: 0,
+        span1: 17.1,
+        span2: 20.5,
+        span3: 17.1,
         span4: 0,
         span5: 0,
         span6: 0,
@@ -159,9 +159,9 @@
           
           //analyze each vehicle configuration
           
-          //full vehicle with 1.25 dla
-          params.axles= [0];
-          params.axleLoads = [100];
+          //full vehicle with 1.25 DLA
+          params.axles= [0, 3.6, 4.8, 11.4, 18];
+          params.axleLoads = [62.5, 175, 175, 218.75, 150];
           // params.UDLs = [0]
           
           var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 200);
@@ -172,8 +172,9 @@
             this.analyzeVehicle(params);
           }
           
-          params.axles = this.reverseAxles(params.axles);
-          params.axleLoads = _.reverse(params.axleLoads);
+          //reversed with 1.25 DLA
+          params.axles= [0, 6.6, 13.2, 14.4, 18];
+          params.axleLoads = [150, 218.75, 175, 175, 62.5];
           
           for (let i = 0; i < numberOfIncrements; i++) {
             params.position = i * increment;
