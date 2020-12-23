@@ -158,127 +158,71 @@
           params.supportMin = this.supports.map(() => 1000000);
           
           //analyze each vehicle configuration
-          var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 1000);
           
           //axles 1-5 with 1.25 DLA
           params.axleSpacing = [3.6, 1.2, 6.6, 6.6]
           params.axleLoads = [62.5, 175, 175, 218.75, 150];
           params.axles = this.spacingToDistance(params);
-          var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 1-5 with 1.25 DLA reversed
           params.axleSpacing = _.reverse(params.axleSpacing)
           params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 1-4 with 1.25 DLA
           params.axleSpacing = [3.6, 1.2, 6.6];
           params.axleLoads = [62.5, 175, 175, 218.75];
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 1-4 with 1.25 DLA reversed
           params.axleSpacing = _.reverse(params.axleSpacing)
           params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 2-5 with 1.25 DLA
           params.axleSpacing = [1.2, 6.6, 6.6];
           params.axleLoads = [175, 175, 218.75, 150];
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 2-5 with 1.25 DLA reversed
           params.axleSpacing = _.reverse(params.axleSpacing)
           params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 1-3 with 1.3 DLA
           params.axleSpacing = [3.6, 1.2];
           params.axleLoads = [65, 182, 182];
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //reversed with 1.3 DLA
           params.axleSpacing = _.reverse(params.axleSpacing)
           params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axles 3-4 with 1.3 DLA
           params.axleSpacing = [6.6];
           params.axleLoads = [182, 227.5];
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //reversed with 1.3 DLA
           params.axleSpacing = _.reverse(params.axleSpacing)
           params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           //axle 4 with 1.4 DLA
           params.axles= [0];
           params.axleLoads = [245];
-          increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
-          
-          for (let i = 0; i < numberOfIncrements; i++) {
-            params.position = i * increment;
-            this.analyzeVehicle(params);
-          }
+          this.analyzeVehicleGroup(params)
           
           this.shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100);});
           this.shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100);});
@@ -400,20 +344,15 @@
           
           return reactionsExpanded;
         },
-        axleSpans: function (params) {
-          var spans = params.spans;
-          var supportDistances = this.supportDistances;
-          var axleDistances = params.axleDistances;
-          var axles= params.axles;
-          var axleSpans = [0];
-          for (let i = 0; i < axles.length; i++) {
-            for (let j = 0; j < spans.length; j++) {
-              if (axleDistances.a[i] >= supportDistances[j] && axleDistances.a[i] <= supportDistances[j + 1]) {
-                axleSpans[i] = j;
-              }//if
-            }
+        analyzeVehicleGroup: function (params) {
+          var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 1000);
+          var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
+          
+          for (let i = 0; i < numberOfIncrements; i++) {
+            params.position = i * increment;
+            this.analyzeVehicle(params);
           }
-          params.axleSpans = axleSpans;
+          
         },
         analyzeVehicle: function (params) {
           var UDLs = params.UDLs;
