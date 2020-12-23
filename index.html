@@ -165,21 +165,9 @@
           params.axles = this.spacingToDistance(params);
           this.analyzeVehicleGroup(params)
           
-          //axles 1-5 with 1.25 DLA reversed
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
           //axles 1-4 with 1.25 DLA
           params.axleSpacing = [3.6, 1.2, 6.6];
           params.axleLoads = [62.5, 175, 175, 218.75];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //axles 1-4 with 1.25 DLA reversed
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
           this.analyzeVehicleGroup(params)
           
@@ -189,33 +177,15 @@
           params.axles = this.spacingToDistance(params);
           this.analyzeVehicleGroup(params)
           
-          //axles 2-5 with 1.25 DLA reversed
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
           //axles 1-3 with 1.3 DLA
           params.axleSpacing = [3.6, 1.2];
           params.axleLoads = [65, 182, 182];
           params.axles = this.spacingToDistance(params);
           this.analyzeVehicleGroup(params)
           
-          //reversed with 1.3 DLA
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
           //axles 3-4 with 1.3 DLA
           params.axleSpacing = [6.6];
           params.axleLoads = [182, 227.5];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //reversed with 1.3 DLA
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
           params.axles = this.spacingToDistance(params);
           this.analyzeVehicleGroup(params)
           
@@ -353,6 +323,19 @@
             this.analyzeVehicle(params);
           }
           
+          if(params.axles.length === 1) {
+            //exit the function (a single axle can't be reversed)
+            return;
+          }
+          
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
+          
+          for (let i = 0; i < numberOfIncrements; i++) {
+            params.position = i * increment;
+            this.analyzeVehicle(params);
+          }
         },
         analyzeVehicle: function (params) {
           var UDLs = params.UDLs;
