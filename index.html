@@ -141,8 +141,6 @@
       },
       methods: {
         analyze: function () {
-          var spans = this.spans;
-          
           //create placeholder for parameters
           var params = {};
           params.axles = [];
@@ -157,42 +155,74 @@
           params.supportMax = this.supports.map(() => -1000000);
           params.supportMin = this.supports.map(() => 1000000);
           
-          //analyze each vehicle configuration
+          //1.25 DLA
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 6.6, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 7, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 8, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 9, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 10, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 11, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 12, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 13, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 14, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 15, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 16, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 17, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 18, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 6.6])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 7])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 8])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 9])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 10])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 11])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 12])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 13])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 14])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 15])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 16])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 17])
+          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 18])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 6.6, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 7, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 8, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 9, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 10, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 11, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 12, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 13, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 14, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 15, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 16, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 17, 6.6])
+          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 18, 6.6])
           
-          //axles 1-5 with 1.25 DLA
-          params.axleSpacing = [3.6, 1.2, 6.6, 6.6]
-          params.axleLoads = [62.5, 175, 175, 218.75, 150];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //axles 1-4 with 1.25 DLA
-          params.axleSpacing = [3.6, 1.2, 6.6];
-          params.axleLoads = [62.5, 175, 175, 218.75];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //axles 2-5 with 1.25 DLA
-          params.axleSpacing = [1.2, 6.6, 6.6];
-          params.axleLoads = [175, 175, 218.75, 150];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //axles 1-3 with 1.3 DLA
-          params.axleSpacing = [3.6, 1.2];
-          params.axleLoads = [65, 182, 182];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
-          
-          //axles 3-4 with 1.3 DLA
-          params.axleSpacing = [6.6];
-          params.axleLoads = [182, 227.5];
-          params.axles = this.spacingToDistance(params);
-          this.analyzeVehicleGroup(params)
+          //1.3 DLA
+          this.analyzeVehicleGroup(params, [65, 182, 182], [3.6, 1.2])
+          this.analyzeVehicleGroup(params, [182, 227.5], [6.6])
+          this.analyzeVehicleGroup(params, [182, 227.5], [7])
+          this.analyzeVehicleGroup(params, [182, 227.5], [8])
+          this.analyzeVehicleGroup(params, [182, 227.5], [9])
+          this.analyzeVehicleGroup(params, [182, 227.5], [10])
+          this.analyzeVehicleGroup(params, [182, 227.5], [11])
+          this.analyzeVehicleGroup(params, [182, 227.5], [12])
+          this.analyzeVehicleGroup(params, [182, 227.5], [13])
+          this.analyzeVehicleGroup(params, [182, 227.5], [14])
+          this.analyzeVehicleGroup(params, [182, 227.5], [15])
+          this.analyzeVehicleGroup(params, [182, 227.5], [16])
+          this.analyzeVehicleGroup(params, [182, 227.5], [17])
+          this.analyzeVehicleGroup(params, [182, 227.5], [18])
           
           //axle 4 with 1.4 DLA
-          params.axles= [0];
           params.axleLoads = [245];
-          this.analyzeVehicleGroup(params)
+          params.axles= [0];
+          
+          var numberOfIncrements = 1000;
+          var increment = (_.sum(this.spans)) / (numberOfIncrements - 1);
+          
+          for (let i = 0; i < numberOfIncrements; i++) {
+            params.position = i * increment;
+            this.analyzeVehicle(params);
+          }
           
           this.shearMax = params.shearMax.map(function (value) {return (Math.round(value * 100) / 100);});
           this.shearMin = params.shearMin.map(function (value) {return (Math.round(value * 100) / 100);});
@@ -314,18 +344,17 @@
           
           return reactionsExpanded;
         },
-        analyzeVehicleGroup: function (params) {
-          var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 1000);
+        analyzeVehicleGroup: function (params, axleLoads, axleSpacing) {
+          params.axleLoads = axleLoads;
+          params.axleSpacing = axleSpacing;
+          params.axles = this.spacingToDistance(params);
+          
+          var numberOfIncrements = 1000;
           var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
             params.position = i * increment;
             this.analyzeVehicle(params);
-          }
-          
-          if(params.axles.length === 1) {
-            //exit the function (a single axle can't be reversed)
-            return;
           }
           
           params.axleSpacing = _.reverse(params.axleSpacing)
