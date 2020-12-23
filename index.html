@@ -90,6 +90,7 @@
         span9: 0,
         span10: 0,
         divisions: 10,
+        truck: [50, 140, 140, 175, 120], //[0, 1, 2, 3, 4]
         shearMax: [],
         shearMin: [],
         momentMax: [],
@@ -140,6 +141,9 @@
         }
       },
       methods: {
+        toggleTruck: function () {
+          
+        },
         analyze: function () {
           //create placeholder for parameters
           var params = {};
@@ -155,66 +159,102 @@
           params.supportMax = this.supports.map(() => -1000000);
           params.supportMin = this.supports.map(() => 1000000);
           
-          //1.25 DLA
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 6.6, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 7, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 8, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 9, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 10, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 11, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 12, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 13, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 14, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 15, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 16, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 17, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75, 150], [3.6, 1.2, 18, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 6.6])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 7])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 8])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 9])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 10])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 11])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 12])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 13])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 14])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 15])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 16])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 17])
-          this.analyzeVehicleGroup(params, [62.5, 175, 175, 218.75], [3.6, 1.2, 18])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 6.6, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 7, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 8, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 9, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 10, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 11, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 12, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 13, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 14, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 15, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 16, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 17, 6.6])
-          this.analyzeVehicleGroup(params, [175, 175, 218.75, 150], [1.2, 18, 6.6])
-          
-          //1.3 DLA
-          this.analyzeVehicleGroup(params, [65, 182, 182], [3.6, 1.2])
-          this.analyzeVehicleGroup(params, [182, 227.5], [6.6])
-          this.analyzeVehicleGroup(params, [182, 227.5], [7])
-          this.analyzeVehicleGroup(params, [182, 227.5], [8])
-          this.analyzeVehicleGroup(params, [182, 227.5], [9])
-          this.analyzeVehicleGroup(params, [182, 227.5], [10])
-          this.analyzeVehicleGroup(params, [182, 227.5], [11])
-          this.analyzeVehicleGroup(params, [182, 227.5], [12])
-          this.analyzeVehicleGroup(params, [182, 227.5], [13])
-          this.analyzeVehicleGroup(params, [182, 227.5], [14])
-          this.analyzeVehicleGroup(params, [182, 227.5], [15])
-          this.analyzeVehicleGroup(params, [182, 227.5], [16])
-          this.analyzeVehicleGroup(params, [182, 227.5], [17])
-          this.analyzeVehicleGroup(params, [182, 227.5], [18])
+          this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 6.6, 6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 6.6, 6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [0, 1, 2], 1.3, [3.6, 1.2]);
+          this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [6.6, 6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [0, 1], 1.3, [3.6]);
+          this.analyzeVehicleGroup(params, [1, 2], 1.3, [1.2]);
+          this.analyzeVehicleGroup(params, [2, 3], 1.3, [6.6]); //see below for BCL variable spacing
+          this.analyzeVehicleGroup(params, [3, 4], 1.3, [6.6]);
           
           //axle 4 with 1.4 DLA
-          params.axleLoads = [245];
+          var singleAxle = this.truck[3] * 1.4;
+          params.axleLoads = [singleAxle];
           params.axles= [0];
+          
+          if (this.truck[1] === 140) { //BCL-625 selected
+            
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 7, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 8, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 9, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 10, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 11, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 12, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 13, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 14, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 15, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 16, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 17, 6.6]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 18, 6.6]);
+            
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 7]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 8]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 9]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 10]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 11]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 12]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 13]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 14]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 15]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 16]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 17]);
+            this.analyzeVehicleGroup(params, [0, 1, 2, 3], 1.25, [3.6, 1.2, 18]);
+            
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 7, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 8, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 9, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 10, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 11, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 12, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 13, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 14, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 15, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 16, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 17, 6.6]);
+            this.analyzeVehicleGroup(params, [1, 2, 3, 4], 1.25, [1.2, 18, 6.6]);
+            
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 7]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 8]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 9]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 10]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 11]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 12]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 13]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 14]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 15]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 16]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 17]);
+            this.analyzeVehicleGroup(params, [1, 2, 3], 1.25, [1.2, 18]);
+            
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [7, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [8, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [9, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [10, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [11, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [12, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [13, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [14, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [15, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [16, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [17, 6.6]);
+            this.analyzeVehicleGroup(params, [2, 3, 4], 1.25, [18, 6.6]);
+            
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [7]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [8]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [9]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [10]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [11]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [12]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [13]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [14]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [15]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [16]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [17]);
+            this.analyzeVehicleGroup(params, [2, 3], 1.3, [18]);
+          }
           
           var numberOfIncrements = 1000;
           var increment = (_.sum(this.spans)) / (numberOfIncrements - 1);
@@ -344,8 +384,8 @@
           
           return reactionsExpanded;
         },
-        analyzeVehicleGroup: function (params, axleLoads, axleSpacing) {
-          params.axleLoads = axleLoads;
+        analyzeVehicleGroup: function (params, axleIndexes, DLA, axleSpacing) {
+          params.axleLoads = axleIndexes.map((index, value) => {return this.truck[value] * DLA;});
           params.axleSpacing = axleSpacing;
           params.axles = this.spacingToDistance(params);
           
@@ -357,8 +397,8 @@
             this.analyzeVehicle(params);
           }
           
-          params.axleSpacing = _.reverse(params.axleSpacing)
-          params.axleLoads = _.reverse(params.axleLoads)
+          params.axleSpacing = _.reverse(params.axleSpacing);
+          params.axleLoads = _.reverse(params.axleLoads);
           params.axles = this.spacingToDistance(params);
           
           for (let i = 0; i < numberOfIncrements; i++) {
