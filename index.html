@@ -142,12 +142,12 @@
       methods: {
         analyze: function () {
           var spans = this.spans;
-          console.log(spans)
           
           //create placeholder for parameters
           var params = {};
           params.axles = [];
           params.axleLoads = [];
+          params.axleSpacing = [];
           // params.UDLs = [];
           params.position = 0;
           params.shearMax = this.joints.map(() => -1000000);
@@ -161,9 +161,9 @@
           var numberOfIncrements = Math.max(Math.round(_.sum(this.spans)) * 2, 1000);
           
           //axles 1-5 with 1.25 DLA
-          params.axles= [0, 3.6, 4.8, 11.4, 18];
+          params.axleSpacing = [3.6, 1.2, 6.6, 6.6]
           params.axleLoads = [62.5, 175, 175, 218.75, 150];
-          // params.UDLs = [0]
+          params.axles = this.spacingToDistance(params);
           var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -172,8 +172,9 @@
           }
           
           //axles 1-5 with 1.25 DLA reversed
-          params.axles= [0, 6.6, 13.2, 14.4, 18];
-          params.axleLoads = [150, 218.75, 175, 175, 62.5];
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -182,9 +183,9 @@
           }
           
           //axles 1-4 with 1.25 DLA
-          params.axles= [0, 3.6, 4.8, 11.4];
+          params.axleSpacing = [3.6, 1.2, 6.6];
           params.axleLoads = [62.5, 175, 175, 218.75];
-          // params.UDLs = [0]
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -193,8 +194,9 @@
           }
           
           //axles 1-4 with 1.25 DLA reversed
-          params.axles= [0, 6.6, 7.8, 11.4];
-          params.axleLoads = [218.75, 175, 175, 62.5];
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -203,9 +205,9 @@
           }
           
           //axles 2-5 with 1.25 DLA
-          params.axles= [0, 1.2, 7.8, 14.4];
+          params.axleSpacing = [1.2, 6.6, 6.6];
           params.axleLoads = [175, 175, 218.75, 150];
-          // params.UDLs = [0]
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -214,8 +216,9 @@
           }
           
           //axles 2-5 with 1.25 DLA reversed
-          params.axles= [0, 6.6, 13.2, 14.4];
-          params.axleLoads = [150, 218.75, 175, 175];
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -224,9 +227,9 @@
           }
           
           //axles 1-3 with 1.3 DLA
-          params.axles= [0, 3.6, 4.8];
+          params.axleSpacing = [3.6, 1.2];
           params.axleLoads = [65, 182, 182];
-          // params.UDLs = [0]
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -235,8 +238,9 @@
           }
           
           //reversed with 1.3 DLA
-          params.axles= [0, 1.2, 3.6];
-          params.axleLoads = [182, 182, 65];
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -245,9 +249,9 @@
           }
           
           //axles 3-4 with 1.3 DLA
-          params.axles= [0, 6.6];
+          params.axleSpacing = [6.6];
           params.axleLoads = [182, 227.5];
-          // params.UDLs = [0]
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -256,8 +260,9 @@
           }
           
           //reversed with 1.3 DLA
-          params.axles= [0, 6.6];
-          params.axleLoads = [227.5, 182];
+          params.axleSpacing = _.reverse(params.axleSpacing)
+          params.axleLoads = _.reverse(params.axleLoads)
+          params.axles = this.spacingToDistance(params);
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -268,7 +273,6 @@
           //axle 4 with 1.4 DLA
           params.axles= [0];
           params.axleLoads = [245];
-          // params.UDLs = [0]
           increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -308,7 +312,6 @@
           //     fixedEndMoments[index] = UDLsExpanded[index] * Math.pow(spansExpanded[index], 2) / 12;
           //   }
           // });
-          
           //add moments from axles
           axles.forEach((axle, index) => {
             var axleDistance = params.position - axle;
@@ -483,16 +486,14 @@
           params.supportMax = params.supportMax.map((value, index) => Math.max(value, supportReactions[index]));
           params.supportMin = params.supportMin.map((value, index) => Math.min(value, supportReactions[index]));
         },
-        reverseVehicle: function (axles) {
-          var axlesReversed = [];
-          var tempArray = [];
-          for (let i = 0; i < axles.length; i++) {
-            tempArray[i] = _.max(axles) - axles[i];
-          }
-          for (let i = 0; i < axles.length; i++) {
-            axlesReversed[i] = tempArray[i];
-          }
-          return axlesReversed;
+        spacingToDistance: function (params) {
+          var cumulative = 0;
+          var axles = params.axleSpacing.map(function (value) {
+            cumulative = Number(cumulative) + Number(value);
+            return cumulative;
+          });
+          axles.unshift(0);
+          return axles;
         },
         analyzeSupportReactions: function(reactionsExpanded) {
           var supportReactions = [];
@@ -509,16 +510,7 @@
             }
           });
           return supportReactions;
-        },
-        reverseAxles: function (axles) {
-          var maxAxle = _.max(axles);
-          var axlesReversed = Object.assign([], axles);
-          axlesReversed = _.reverse(axlesReversed);
-          axlesReversed = axlesReversed.map((axle) => {
-            return Math.abs(axle - maxAxle);
-          });
-          return axlesReversed;
-        },
+        }
       }
     });
   </script>
