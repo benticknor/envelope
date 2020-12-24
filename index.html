@@ -38,7 +38,7 @@
         </div>
         <div>
           <label class="checkbox">BCL625</label>
-          <input type="checkbox" v-on:change="toggleTruck()" v-model="BCL625">
+          <input type="checkbox" v-model="BCL625">
         </div>
         <a class="button is-primary is-fullwidth" v-on:click="analyze">Analyze</a>
         <span class="title is-4">Report</span>
@@ -95,8 +95,7 @@
         span9: 0,
         span10: 0,
         divisions: 10,
-        BCL625: false,
-        truck: [50, 125, 125, 175, 150], //[0, 1, 2, 3, 4]
+        BCL625: true,
         shearMax: [],
         shearMin: [],
         momentMax: [],
@@ -141,25 +140,17 @@
         },
         supports: function () {
           return this.supportDistances.map(function (value, index) {return index + 1;});
+        },
+        truck: function () {
+          if (this.BCL625 == true) {
+            return [50, 140, 140, 175, 120];
+          } else {
+            return [50, 125, 126, 175, 150];
+          }
         }
       },
       methods: {
-        toggleTruck: function () {
-          if (this.BL625 === true) {
-            this.truck = [50, 125, 125, 175, 150];
-          } else {
-            this.truck = [50, 140, 140, 175, 120];
-          }
-        },
         analyze: function () {
-          //reset results
-          this.shearMax = [];
-          this.shearMin = [];
-          this.momentMax = [];
-          this.momentMin = [];
-          this.supportMax = [];
-          this.supportMin = [];
-          
           //create placeholder for parameters
           var params = {};
           params.axles = [];
@@ -190,7 +181,7 @@
           params.axleLoads = [singleAxle];
           params.axles= [0];
           
-          if (this.BCL625 === true) {
+          if (this.BCL625 == true) {
             
             this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 7, 6.6]);
             this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 8, 6.6]);
