@@ -24,18 +24,23 @@
         <span class="title is-4">Spans</span>
         <div class="field">
           <div class="control">
-            <input class="input" v-model.number.lazy="span1" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span2" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span3" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span4" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span5" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span6" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span7" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span8" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span9" v-on:change="analyze">
-            <input class="input" v-model.number.lazy="span10" v-on:change="analyze">
+            <input class="input" v-model.number.lazy="span1">
+            <input class="input" v-model.number.lazy="span2">
+            <input class="input" v-model.number.lazy="span3">
+            <input class="input" v-model.number.lazy="span4">
+            <input class="input" v-model.number.lazy="span5">
+            <input class="input" v-model.number.lazy="span6">
+            <input class="input" v-model.number.lazy="span7">
+            <input class="input" v-model.number.lazy="span8">
+            <input class="input" v-model.number.lazy="span9">
+            <input class="input" v-model.number.lazy="span10">
           </div>
         </div>
+        <div>
+          <label class="checkbox">BCL625</label>
+          <input type="checkbox" v-on:change="toggleTruck()" v-model="BCL625">
+        </div>
+        <a class="button is-primary is-fullwidth" v-on:click="analyze">Analyze</a>
         <span class="title is-4">Report</span>
         <div>
           <table class="table">
@@ -90,16 +95,14 @@
         span9: 0,
         span10: 0,
         divisions: 10,
-        truck: [50, 140, 140, 175, 120], //[0, 1, 2, 3, 4]
+        BCL625: false,
+        truck: [50, 125, 125, 175, 150], //[0, 1, 2, 3, 4]
         shearMax: [],
         shearMin: [],
         momentMax: [],
         momentMin: [],
         supportMax: [],
         supportMin: []
-      },
-      mounted: function () {
-        this.analyze();
       },
       computed: {
         spans: function () {
@@ -142,9 +145,21 @@
       },
       methods: {
         toggleTruck: function () {
-          
+          if (this.BL625 === true) {
+            this.truck = [50, 125, 125, 175, 150];
+          } else {
+            this.truck = [50, 140, 140, 175, 120];
+          }
         },
         analyze: function () {
+          //reset results
+          this.shearMax = [];
+          this.shearMin = [];
+          this.momentMax = [];
+          this.momentMin = [];
+          this.supportMax = [];
+          this.supportMin = [];
+          
           //create placeholder for parameters
           var params = {};
           params.axles = [];
@@ -175,7 +190,7 @@
           params.axleLoads = [singleAxle];
           params.axles= [0];
           
-          if (this.truck[1] === 140) { //BCL-625 selected
+          if (this.BCL625 === true) {
             
             this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 7, 6.6]);
             this.analyzeVehicleGroup(params, [0, 1, 2, 3, 4], 1.25, [3.6, 1.2, 8, 6.6]);
@@ -256,7 +271,7 @@
             this.analyzeVehicleGroup(params, [2, 3], 1.3, [18]);
           }
           
-          var numberOfIncrements = 1000;
+          var numberOfIncrements = 100;
           var increment = (_.sum(this.spans)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
@@ -389,7 +404,7 @@
           params.axleSpacing = axleSpacing;
           params.axles = this.spacingToDistance(params);
           
-          var numberOfIncrements = 1000;
+          var numberOfIncrements = 100;
           var increment = (_.sum(this.spans) + _.max(params.axles)) / (numberOfIncrements - 1);
           
           for (let i = 0; i < numberOfIncrements; i++) {
